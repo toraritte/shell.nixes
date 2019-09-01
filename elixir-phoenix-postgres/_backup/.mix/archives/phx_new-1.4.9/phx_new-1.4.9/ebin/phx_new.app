@@ -1,0 +1,12 @@
+{application,phx_new,
+             [{applications,[kernel,stdlib,elixir]},
+              {description,"Phoenix framework project generator.\n\nProvides a `mix phx.new` task to bootstrap a new Elixir application\nwith Phoenix dependencies.\n"},
+              {modules,['Elixir.Mix.Tasks.Local.Phx',
+                        'Elixir.Mix.Tasks.Phx.New',
+                        'Elixir.Mix.Tasks.Phx.New.Ecto',
+                        'Elixir.Mix.Tasks.Phx.New.Web','Elixir.Phx.New.Ecto',
+                        'Elixir.Phx.New.Generator','Elixir.Phx.New.Project',
+                        'Elixir.Phx.New.Single','Elixir.Phx.New.Umbrella',
+                        'Elixir.Phx.New.Web']},
+              {registered,[]},
+              {vsn,"1.4.9"}]}.
