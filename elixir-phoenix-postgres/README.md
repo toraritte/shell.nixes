@@ -41,11 +41,41 @@ archive.install hex phx_new`).
 Tried this on recent  install of Ubuntu, no problems
 there.
 
-### 0.2 A PostgreSQL server is already running ("port 5432 already in use")
+### 0.2 PostgreSQL
 
-Just  uncomment the  line  below  the comment  `PORT
-ALREADY IN USE` in `shell.nix`, and use another port
-(e.g., 5433).
+#### 0.2.0 Another server already running ("port 5432 already in use")
+
+> TODO
+>
+> Obviously,  Nix's  purpose   is  to  automate  these
+> manual configurations (such as  changing a port, and
+> changing  any dependent  app  configs  with it),  so
+> figure it out.
+
+1. Uncomment the  line below the comment  `PORT ALREADY
+   IN USE` in `shell.nix`,  and use another port (e.g.,
+   5433).
+
+2. Update  the used  Mix environment's  config file.
+   For example, `config/dev.exs`:
+
+   ```elixir
+   config :anv, ANV.Repo,
+     username: "your_username",
+     password: "postgres",
+     database: "db_name",
+     # ...
+     port: 5433
+   ```
+
+3. (Optional)  If  one  wants  to  connect  to  the
+   PostgreSQL console:
+
+   ```
+   $ psql --host=$PGDATA --username=your_username --dbname=db_name --port=5433
+   ```
+
+   See the [`psql` doc](https://www.postgresql.org/docs/current/app-psql.html) for more.
 
 ### 0.3 Add environment variables
 
