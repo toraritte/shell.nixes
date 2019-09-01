@@ -98,6 +98,8 @@ pkgs.mkShell {
       sed -i "s|^#$OPT.*$|$OPT = '$PGDATA'|" $PGDATA/postgresql.conf
 
       ######################################################
+      # PORT ALREADY IN USE
+      ######################################################
       # If another `nix-shell` is  running with a PostgreSQL
       # instance,  the logs  will show  complaints that  the
       # default port 5432  is already in use.  Edit the line
