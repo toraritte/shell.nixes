@@ -41,7 +41,7 @@ archive.install hex phx_new`).
 Tried this on recent  install of Ubuntu, no problems
 there.
 
-### 0.2 PostgreSQL
+### 0.2 Possible issues
 
 #### 0.2.0 Another server already running ("port 5432 already in use")
 
@@ -76,6 +76,30 @@ there.
    ```
 
    See the [`psql` doc](https://www.postgresql.org/docs/current/app-psql.html) for more.
+
+#### 0.2.1 Starting `phx.server` results in `port: 4000]) for reason :eaddrinuse (address already in use)`
+
+Another server  is already  running on  the machine,
+hence port 4000 is taken.  Either stop that, or edit
+`dev.exs` according to this
+[Stackoverflow answer](https://stackoverflow.com/a/37912696/1498178):
+
+> Edit your `config/dev.exs` and change the Endpoint http port like the following:
+>
+> ```elixir
+> config :my_app, MyApp.Endpoint,
+>   http: [port: System.get_env("PORT") || 4000],
+> ```
+>
+> This allows the port to be set, or left as the default `4000`:
+>
+> ```text
+> $ PORT=4002 mix phx.server
+> $ PORT=4002 iex -S mix phx.server
+>
+> # will run on port 4000
+> $ mix phoenix.server
+> ```
 
 ### 0.3 Add environment variables
 
