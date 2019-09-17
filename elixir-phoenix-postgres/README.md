@@ -1,3 +1,8 @@
+> **Note**
+> The   main   source   of    truth   is   always   in
+> [`shell.nix`](./shell.nix), with lots  of details in
+> the comments.
+
 ## 0. Start
 
 ```text
