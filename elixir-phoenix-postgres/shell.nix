@@ -11,7 +11,7 @@
 pkgs.mkShell {
 
   buildInputs = with pkgs; [
-    beam.packages.erlangR21.elixir_1_9
+    beam.packages.erlangR22.elixir_1_9
     postgresql_11
     nodejs-12_x
     git
