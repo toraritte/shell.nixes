@@ -1,0 +1,4 @@
+[submodule "azure-new"]
+	path = azure-new
+	url = https://github.com/toraritte/nixpkgs
+	branch = tweak-azure-new3
