@@ -1,4 +1,3 @@
 [submodule "azure-new"]
 	path = azure-new
-	url = https://github.com/toraritte/nixpkgs
-	branch = tweak-azure-new3
+	url = https://github.com/society-for-the-blind/azure-new
