@@ -1,6 +1,13 @@
 # An alternative to the primitive approach below would
 # be using `niv`; see https://nixos.org/guides/towards-reproducibility-pinning-nixpkgs.html
 
+# To  get a  specific  version  (older, newer,  later,
+# etc.)  of  Deno,   either  update  the  `commitHash`
+# variable (see  comment after  "let") or  provide the
+# Nixpkgs  github archive  link pinned  to a  specific
+# commit on the command  line when calling `nix-shell`
+# (see comment after "in").
+
 let
   # git SHA1 commit hash in the NixOS/nixpkgs github repo
   # ( This will get Deno 1.8.3; to get the hash  of the
@@ -24,8 +31,21 @@ let
   # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
   fetchedTarball = builtins.fetchTarball pinnedNixpkgsGithubURL;
 in
-  # If  this  expression  is  called  without  a  `pkgs`
-  # argument, import the fixed one fetched above.
+  # If  `nix-shell`  is  simply  called  with  this  Nix
+  # expression,  then  the  used Nixpkgs  link  will  be
+  # pinned to the `commitHash` above.
+  #
+  # These are equivalent:
+  #
+  #     $ nix-shell deno-shell.nix
+  #
+  #     $ nix-shell -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/deno-shell.nix")'
+  #
+  # A pinned link can also be used directly by
+  #
+  #     $ nix-shell --arg pkgs 'import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/f4593ab.tar.gz") {}' deno-shell.nix
+  #
+  # which will override everything above.
   { pkgs ? import fetchedTarball {} }:
 
   pkgs.mkShell {
