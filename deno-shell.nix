@@ -29,7 +29,7 @@ let
 
   # The downloaded archive will be (temporarily?) housed in the Nix store
   # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
-  fetchedTarball = builtins.fetchTarball pinnedNixpkgsGithubURL;
+  fetchedPinnedTarball = builtins.fetchTarball pinnedNixpkgsGithubURL;
 in
   # If  `nix-shell`  is  simply  called  with  this  Nix
   # expression,  then  the  used Nixpkgs  link  will  be
@@ -46,7 +46,7 @@ in
   #     $ nix-shell --arg pkgs 'import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/f4593ab.tar.gz") {}' deno-shell.nix
   #
   # which will override everything above.
-  { pkgs ? import fetchedTarball {} }:
+  { pkgs ? import fetchedPinnedTarball {} }:
 
   pkgs.mkShell {
     buildInputs = [ pkgs.deno ];
