@@ -2,7 +2,7 @@
 # be using `niv`; see https://nixos.org/guides/towards-reproducibility-pinning-nixpkgs.html
 
 # To  get a  specific  version  (older, newer,  later,
-# etc.)  of  Deno,   either  update  the  `commitHash`
+# etc.)  of  Deno,   either  update  the  `nixpkgs_commit`
 # variable (see  comment after  "let") or  provide the
 # Nixpkgs  github archive  link pinned  to a  specific
 # commit on the command  line when calling `nix-shell`
@@ -23,17 +23,23 @@ let
   #
   #        git log --oneline --follow -- pkgs/development/web/deno/default.nix | head -1
   #
-  # and update the `commitHash` variable below.
-  commitHash = "f4593ab";
-  pinnedNixpkgsGithubURL = "https://github.com/NixOS/nixpkgs/archive/${commitHash}.tar.gz";
+  # and update the `nixpkgs_commit` variable below.
+  nixpkgs_commit = "f4593ab";
+  nixpkgs_sha256 = "01bmiqndp1czwjw87kp21dvxs0zwv7yypqlyp713584iwncxjv0r";
+  pinnedNixpkgsGithubURL = "https://github.com/NixOS/nixpkgs/archive/${nixpkgs_commit}.tar.gz";
 
   # The downloaded archive will be (temporarily?) housed in the Nix store
   # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
-  fetchedPinnedTarball = builtins.fetchTarball pinnedNixpkgsGithubURL;
+  fetchedPinnedTarball = builtins.fetchTarball {
+    name = "nixpkgs";
+    url = pinnedNixpkgsGithubURL;
+    sha256 = nixpkgs_sha256;
+  };
+  # fetchedPinnedTarball = builtins.fetchTarball pinnedNixpkgsGithubURL;
 in
   # If  `nix-shell`  is  simply  called  with  this  Nix
   # expression,  then  the  used Nixpkgs  link  will  be
-  # pinned to the `commitHash` above.
+  # pinned to the `nixpkgs_commit` above.
   #
   # These are equivalent:
   #
