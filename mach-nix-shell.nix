@@ -6,6 +6,8 @@ let
 
   # The downloaded archive will be (temporarily?) housed in the Nix store
   # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
+  # (Try any of the `fetchTarball` commands  below  in `nix repl`, and it
+  #  will print out the path.)
   fetchedPinnedTarball = builtins.fetchTarball {
     name = "mach-nix";
     url = "https://github.com/DavHau/mach-nix/tarball/${mach_nix_version}";
