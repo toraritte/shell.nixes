@@ -3,6 +3,20 @@ source files are heavily commented as well.
 
 ---
 
+## Some `nix-shell` tricks learned along the way
+
+### Invoke `nix-shell` with a URL of a `shell.nix`
+
+The discussion can be found [here](https://discourse.nixos.org/t/how-to-invoke-nix-shell-with-the-contents-of-an-url-e-g-a-raw-github-link/12281) and using [deno-shell.nix](./deno-shell.nix) as an example:
+
+```shell
+  nix-shell -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/deno-shell.nix")'
+```
+
+### Call `nix-shell` on a package that is not in the Nixpkgs repo
+
+That is, kind of like `nix-shell -p` but that can only be called on Nixpkgs packages (as far as I know). See [mach-nix/README.md](./mach-nix/README.md) for the details.
+
 ## Azure-related
 
 ### `azure-new`
