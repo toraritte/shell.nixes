@@ -30,11 +30,13 @@ let
 
   # The downloaded archive will be (temporarily?) housed in the Nix store
   # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
-  fetchedPinnedTarball = builtins.fetchTarball {
-    name = "nixpkgs";
-    url = pinnedNixpkgsGithubURL;
-    sha256 = nixpkgs_sha256;
-  };
+  fetchedPinnedTarball =
+    builtins.fetchTarball
+      { name = "nixpkgs";
+        url = pinnedNixpkgsGithubURL;
+        sha256 = nixpkgs_sha256;
+      }
+  ;
   # fetchedPinnedTarball = builtins.fetchTarball pinnedNixpkgsGithubURL;
 in
   # If  `nix-shell`  is  simply  called  with  this  Nix
@@ -54,6 +56,5 @@ in
   # which will override everything above.
   { pkgs ? import fetchedPinnedTarball {} }:
 
-  pkgs.mkShell {
-    buildInputs = [ pkgs.deno ];
-  }
+  pkgs.mkShell
+    { buildInputs = [ pkgs.deno ]; }
