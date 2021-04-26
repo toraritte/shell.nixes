@@ -1,7 +1,10 @@
-Each  folder  has  their specific  README,  and  the
-source files are heavily commented as well.
+Each folder has their specific README, but the source files are heavily commented as well, in case it is missing. If you still have any questions, or have suggestions, please feel free to open an issue, PR, or track me down any other way.
 
 ---
+
+## Helpers (i.e., the [`_helpers`](./_helpers) directory)
+
+Mostly (only one, to be precise, at the moment) Nix expressions to promote code re-use.
 
 ## Some `nix-shell` tricks learned along the way
 
@@ -15,37 +18,48 @@ The discussion can be found [here](https://discourse.nixos.org/t/how-to-invoke-n
 
 ### Call `nix-shell` on a package that is not in the Nixpkgs repo
 
-That is, kind of like `nix-shell -p` but that can only be called on Nixpkgs packages (as far as I know). See [mach-nix/README.md](./mach-nix/README.md) for the details.
+That is, kind of like `nix-shell -p` but that can only be called on Nixpkgs packages (as far as I know).
 
-## Azure-related
+#### Traditional way
 
-### `azure-new`
-
-`azure-new` is a collection of scripts to provision custom NixOS images and VMs on the [Azure cloud platform](https://azure.microsoft.com/en-us/), created by @colemickens. I presume the main motivation was that [the Azure backend has been removed from NixOps](https://github.com/NixOS/nixops/pull/1131).
-
-The directory with the same name is a git submodule tracking `tweak-azure-new3` branch on [my fork of Nixpkgs](https://github.com/toraritte/nixpkgs) so beware when [cloning with submodules](https://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules) as it is huge.
-
-> NOTE: The scripts are located in `nixos/maintainers/scripts/azure-new`.
-
-```text
-Receiving objects: 100% (1957809/1957809), 1.12 GiB | 4.47 MiB/s, done.
+```shell
+nix-shell -p '(callPackage (fetchTarball https://github.com/DavHau/mach-nix/tarball/3.0.2) {}).mach-nix'
 ```
 
-### `flake-azure`
+#### Nix flakes
 
-@colemickens has been keeping busy and dropped this great project:
-https://github.com/colemickens/flake-azure-demo/tree/dev
+That is, if 
 
-I have yet to find time to try it out but here's the IRC channel #nixos-azure with [logs](https://logs.nix.samueldr.com/nixos-azure/).
+  1. [flakes support is enabled](https://nixos.wiki/wiki/Flakes#:~:text=Installing%20flakes) (at least, at the time of writing this, flakes are not yet enabled by default), and 
+  
+  2. the target repo also supports flakes (right?...),
 
-## `git submodule` reminder
+one can do:
 
-Reminder on [how to set up a git submodule that tracks a branch](https://stackoverflow.com/a/15782629/1498178):
-
-```text
-# add submodule to track master branch
-git submodule add -b branch_name URL_to_Git_repo optional_directory_rename
-
-# update your submodule
-git submodule update --remote 
+```shell
+nix shell github:DavHau/mach-nix
 ```
+
+Quoting [the rest](https://discourse.nixos.org/t/how-to-invoke-nix-shell-p-for-packages-not-in-nixpkgs/12475/3) verbatim because I have yet to understand it:
+
+> I would just capture `mach-nix` in your `shell.nix` or `devShell` in your `flake.nix`. Then pair it with [`direnv`](https://direnv.net/) to allow you to bring it into your shell when you need it for a particular project.
+
+## `azure-new`
+
+<sup>Mentioning it here because it is not a simple subdirectory but a git submodule - it has its own extensive readme, but wnated to note it here as well.</sup>
+
+`azure-new` is a collection of scripts to provision custom NixOS images and VMs on the [Microsoft Azure cloud computing platform](https://azure.microsoft.com/en-us/), originally created by @colemickens. I presume the main motivation was that [the Azure backend has been removed from NixOps](https://github.com/NixOS/nixops/pull/1131). The weird layout of the project comes from the fact that it has been ripped out from the [Nixpkgs repo](https://github.com/toraritte/nixpkgs); see more details in the project readme on the how.)
+
+> **Tip**: To clone this repo **with** the `azure-new` submodule, please see the [How to “git clone” including submodules?](https://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules) Stackoverflow thread.
+
+> **`git submodule` reminders to self**  
+> 
+> Reminder on [how to set up a git submodule that tracks a branch](https://stackoverflow.com/a/15782629/1498178):
+> 
+> ```text
+> # add submodule to track master branch
+> git submodule add -b branch_name URL_to_Git_repo optional_directory_rename
+> 
+> # update your submodule
+> git submodule update --remote 
+> ```
