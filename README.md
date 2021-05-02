@@ -8,41 +8,41 @@ Mostly (only one, to be precise, at the moment) Nix expressions to promote code 
 
 ## Some `nix-shell` tricks learned along the way
 
-### Invoke `nix-shell` with a URL of a `shell.nix`
++ **_invoke `nix-shell` with a URL of a `shell.nix`_**
 
-The discussion can be found [here](https://discourse.nixos.org/t/how-to-invoke-nix-shell-with-the-contents-of-an-url-e-g-a-raw-github-link/12281) and using [deno-shell.nix](./deno-shell.nix) as an example:
-
-```shell
-  nix-shell -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/deno-shell.nix")'
-```
-
-### Call `nix-shell` on a package that is not in the Nixpkgs repo
-
-That is, kind of like `nix-shell -p` but that can only be called on Nixpkgs packages (as far as I know).
-
-#### Traditional way
-
-```shell
-nix-shell -p '(callPackage (fetchTarball https://github.com/DavHau/mach-nix/tarball/3.0.2) {}).mach-nix'
-```
-
-#### Nix flakes
-
-That is, if 
-
-  1. [flakes support is enabled](https://nixos.wiki/wiki/Flakes#:~:text=Installing%20flakes) (at least, at the time of writing this, flakes are not yet enabled by default), and 
+  The discussion can be found [here](https://discourse.nixos.org/t/how-to-invoke-nix-shell-with-the-contents-of-an-url-e-g-a-raw-github-link/12281) and using [deno-shell.nix](./deno-shell.nix) as an example:
   
-  2. the target repo also supports flakes (right?...),
+  ```shell
+    nix-shell -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/deno-shell.nix")'
+  ```
 
-one can do:
++ **_call `nix-shell` on a package that is not in the Nixpkgs repo_**
 
-```shell
-nix shell github:DavHau/mach-nix
-```
-
-Quoting [the rest](https://discourse.nixos.org/t/how-to-invoke-nix-shell-p-for-packages-not-in-nixpkgs/12475/3) verbatim because I have yet to understand it:
-
-> I would just capture `mach-nix` in your `shell.nix` or `devShell` in your `flake.nix`. Then pair it with [`direnv`](https://direnv.net/) to allow you to bring it into your shell when you need it for a particular project.
+  That is, kind of like `nix-shell -p` but that can only be called on Nixpkgs packages (as far as I know).
+  
+  #### Traditional way
+  
+  ```shell
+  nix-shell -p '(callPackage (fetchTarball https://github.com/DavHau/mach-nix/tarball/3.0.2) {}).mach-nix'
+  ```
+  
+  #### Nix flakes
+  
+  That is, if 
+  
+    1. [flakes support is enabled](https://nixos.wiki/wiki/Flakes#:~:text=Installing%20flakes) (at least, at the time of writing this, flakes are not yet enabled by default), and 
+    
+    2. the target repo also supports flakes (right?...),
+  
+  one can do:
+  
+  ```shell
+  nix shell github:DavHau/mach-nix
+  ```
+  
+  Quoting [the rest](https://discourse.nixos.org/t/how-to-invoke-nix-shell-p-for-packages-not-in-nixpkgs/12475/3) verbatim because I have yet to understand it:
+  
+  > I would just capture `mach-nix` in your `shell.nix` or `devShell` in your `flake.nix`. Then pair it with [`direnv`](https://direnv.net/) to allow you to bring it into your shell when you need it for a particular project.
 
 ## `azure-new`
 
