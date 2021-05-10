@@ -4,7 +4,7 @@ Each folder has their specific README, but the source files are heavily commente
 
 ## Helpers (i.e., the [`_helpers`](./_helpers) directory)
 
-Mostly (only one, to be precise, at the moment) Nix expressions to promote code re-use.
+Mostly Nix expressions (only one at the moment, to be precise) to promote code re-use.
 
 ## Some `nix-shell` tricks learned along the way
 

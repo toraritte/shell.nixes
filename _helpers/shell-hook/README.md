@@ -2,7 +2,7 @@
 
 <sup>The idea itself was suggested by @SRGOM in [issue #1](https://github.com/toraritte/shell.nixes/issues/1), but instead of modularizing shell scripts themselves (e.g., [like this](https://stackoverflow.com/questions/8352851/how-to-call-one-shell-script-from-another-shell-script)), decided to solve it with the Nix language using `import`s.</sup>
 
-See list of pre-requisite concepts at the bottom. TODO: add link
+See [list of pre-requisite concepts](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#-pre-requisite-concepts) at the bottom.
 
 ## 1. How to use
 
@@ -33,15 +33,17 @@ pkgs.mkShell {
 }
 ```
 
+See [2.2 `clam.nix` parameters](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#22-clamnix-parameters) section below that describes the attribute set the `clam.nix` function expects.
+
 ## 2. How [`clam.nix`](./clam.nix) works
 
 [`clam.nix`](./clam.nix) is a Nix expression function, and its parameters add extra functionality to the returned [shell script](https://en.wikipedia.org/wiki/Shell_script). The template defines the generic phases of
 
-  1. **setup** (`nixShellDataDir`)
-  2. **actions** (`cavern`)
-  3. **clean-up** (`rump`)
+  1. [**setup**](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#211-setup-phase) (`nixShellDataDir`)
+  2. [**actions**](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#212-actions-phase) (`cavern`)
+  3. [**clean-up**](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#213-clean-up-phase) (`rump`)
 
- where the the items in the parentheses denote the function's parameters that is used in those phases.
+ where the the items in the parentheses denote the corresponding attribute names in the `clam.nix` function's input attribute set. (See [2.2 `clam.nix` parameters](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#22-clamnix-parameters) section below.)
 
 <figure>
   <img src="https://i.imgur.com/Wmw4hl6.jpg" height="72%" width="72%" alt="An empty clam shell slightly opened, photographed on a sandy beach with the ocean and the clear sky as a background."/>
@@ -55,7 +57,7 @@ pkgs.mkShell {
 │       ├── inserts          - generic shell script snippets
 │       │   │                  that add extra functionality;
 │       │   │                  see "2.3 Inserts"
-│       │   ├── mix.nix  
+│       │   ├── mix.nix
 │       │   └── postgres.nix
 │       └── README.md
 ```
@@ -64,26 +66,38 @@ pkgs.mkShell {
 
 #### 2.1.1 Setup phase
 
-```nix
-mkdir ${nixShellDataDir}
-export NIX_SHELL_DIR=$PWD/${nixShellDataDir}
-```
+> **Default actions:**
+>
+>     mkdir ${nixShellDataDir}                     # (1)
+>     export NIX_SHELL_DIR=$PWD/${nixShellDataDir} # (2)
+
+> NOTE: This phase doesn't accept any custom actions at the moment, only the name of the temporary directory described below.
 
 That is,
 
-1. create the Nix shell temporary directory (see **2.1.1 `nixShellDataDir`** section for its purpose), and
+1. create the Nix shell temporary directory (see [**2.1.1 `nixShellDataDir`**](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#221-nixshelldatadir--string-default-nix-shell) section for its purpose), and
 
 2. make its path available in the Nix shell environment in the `NIX_SHELL_DIR` environment variable;`NIX_SHELL_DIR` can then be used in custom shell commands (see **1.2 Actions phase** and **1.3 Clean-up phase** sections) to refer to the temporary Nix shell temporary directory.
 
 #### 2.1.2 Actions phase
 
-> NOTE: **This phase has no default actions**.
+> **Default actions:** None
 
 Set up development environment (by including custom shell commands in `cavern`; see **2.2.2 `cavern`**) for your specific language or framework or customize the shell for your purpose. (E.g., start a database instance, set environment variables, download language packages, etc.)
 
 #### 2.1.3 Clean-up phase
 
-By default, this phase deletes the `$NIX_SHELL_DIR` (see **2.1.1 Setup phase** section) directory, but any other clean-up measures need to be provided by the user.
+> **Default actions:**
+>
+>     cd $PWD               # (1)
+>     rm -rf $NIX_SHELL_DIR # (2)
+
+That is,
+
+1. return to the project directory (see [comment](https://github.com/toraritte/shell.nixes/blob/4ca7310e6826a57e789a6786b007f6c2270a431c/_helpers/shell-hook/clam.nix#L57-L63)), and
+2. delete the `$NIX_SHELL_DIR` directory (see **2.1.1 Setup phase** section), but any other clean-up measures need to be provided by the user.
+
+<sup>TODO: Is there a need to retain it? My workflow is usually to (1) enter `nix-shell`, (2) do stuff, and (3) suspend the system at the end of the day/session, so I start in the same environment the next time. This also means if I make changes to the environment, and these won't be reflected when I'll enter it the next time. I would argue that **deleting it is good** because it forces one to update the `shell.nix` on change (and some action will definitely warrant this anyway, such as changing environment variables).</sup>
 
 For example, if a database instance has been started previously, it will keep running when exiting Nix shell, unless it is explicitly stopped in the clean-up phase (via shell commands specified in `rump`; see **2.2.3 `rump`**).
 
@@ -100,9 +114,7 @@ For example, if a database instance has been started previously, it will keep ru
 
 #### 2.2.1 `nixShellDataDir` :: String (default: `.nix-shell`)
 
-The name of the temporary directory created in the **setup phase** (see sections **2. How clam.nix works** and **2.1 Setup** below) when entering the Nix shell to to store application-specific data, instead of having those scattered around in the system (e.g., in the user's home directory, `/run`, etc.). This temporary directory will be deleted when exiting the shell (see **1.3 Clean-up** section). 
-
-<sup>TODO: Is there a need to retain it? My workflow is usually to (1) enter `nix-shell`, (2) do stuff, and (3) suspend the system at the end of the day/session, so I start in the same environment the next time. This also means if I make changes to the environment, and these won't be reflected when I'll enter it the next time. I would argue that **deleting it is good** because it forces one to update the `shell.nix` on change (and some action will definitely warrant this anyway, such as changing environment variables).</sup>
+The name of the temporary directory created in the **setup phase** (see sections **2. How clam.nix works** and **2.1 Setup** below) when entering the Nix shell to to store application-specific data, instead of having those scattered around in the system (e.g., in the user's home directory, `/run`, etc.). This temporary directory will be deleted when exiting the shell (see **1.3 Clean-up** section).
 
 Examples of application specific data:
 
@@ -124,7 +136,7 @@ Accepts a string that contains valid shell commands; see **2.1.2 Clean-up phase*
 
 A collection of generic shell script snippets that I've been re-using between different environments. For example, [./inserts/postgres.nix](./inserts/postgres.nix) spins up a PostgreSQL server (which works just the same for an Elixir project as for a Python one).
 
-## ∞. Pre-requisite concepts
+## ∞. Pre-requisite concepts <sup>(work in progress)</sup>
 
 ### Derivation
 
@@ -145,7 +157,7 @@ TODO
 From [`nix-shell`'s Nix manual entry](https://nixos.org/manual/nix/stable/#name-2):
 
 > If the derivation defines the variable `shellHook`, it will be evaluated after `$stdenv/setup` has been sourced. Since this hook is not executed by regular Nix builds, it allows you to perform initialisation specific to `nix-shell`. For example, the derivation attribute
-> 
+>
 >     shellHook =
 >       ''
 >         echo "Hello shell"
