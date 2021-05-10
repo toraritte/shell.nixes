@@ -6,38 +6,22 @@ See [list of pre-requisite concepts](https://github.com/toraritte/shell.nixes/tr
 
 ## 1. How to use
 
-The reference usage of [`clam.nix`](./clam.nix) is demonstrated in [`elixir-phoenix-postgres/shell.nix`](../../elixir-phoenix-postgres/shell.nix), but see below for an example demonstration, and the following sections explain the structure and how it works.
-
-```nix
-pkgs.mkShell {
-
-  buildInputs =
-    [
-      # ...
-    ];
-
-  shellHook =
-    let
-      rump =
-        ''
-        pg_ctl -D $PGDATA stop
-        ''
-      ;
-      cavern =
-          import ../_helpers/shell-hook/inserts/postgres.nix
-        + import ../_helpers/shell-hook/inserts/mix.nix
-      ;
-    in
-      import ../_helpers/shell-hook/clam.nix { inherit cavern rump; }
-  ;
-}
-```
-
-See [2.2 `clam.nix` parameters](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#22-clamnix-parameters) section below that describes the attribute set the `clam.nix` function expects.
+The reference usage of [`clam.nix`](./clam.nix) is demonstrated in [`elixir-phoenix-postgres/shell.nix`](../../elixir-phoenix-postgres/shell.nix).
 
 ## 2. How [`clam.nix`](./clam.nix) works
 
-[`clam.nix`](./clam.nix) is a Nix expression function, and its parameters add extra functionality to the returned [shell script](https://en.wikipedia.org/wiki/Shell_script). The template defines the generic phases of
+[`clam.nix`](./clam.nix) is a Nix expression function that expects an attribute set in the form of
+
+```nix
+{ nixShellDataDir ? ".nix-shell"
+, cavern
+, rump ? ""
+}:
+```
+
+(See [2.2 `clam.nix` parameters](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#22-clamnix-parameters) section below.)
+
+The template defines the generic phases of
 
   1. [**setup**](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#211-setup-phase) (`nixShellDataDir`)
   2. [**actions**](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#212-actions-phase) (`cavern`)

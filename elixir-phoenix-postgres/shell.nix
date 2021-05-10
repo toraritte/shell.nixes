@@ -20,24 +20,26 @@ pkgs.mkShell {
 
   shellHook =
     let
-      rump =
-        ''
-        ######################################################
-        # Stop PostgreSQL
-        # ---------------
-        # `PGDATA` is declared in
-        # ./shell-hook-inserts/postgres.nix
-        ######################################################
-
-        pg_ctl -D $PGDATA stop
-        ''
-      ;
       cavern =
           import ../_helpers/shell-hook/inserts/postgres.nix
         + import ../_helpers/shell-hook/inserts/mix.nix
+        # + ''
+        #   test_callback() { echo "works!"; }
+        #   add_cleanup_callback_name "test_callback"
+        #   ''
       ;
+      # rump =
+      #   ''
+      #   echo
+      #   echo '==========================='
+      #   echo \"Arbitrary actions  here but\"
+      #   echo \"watch the double-quotes!\"
+      #   echo '==========================='
+      #   echo
+      #   ''
+    # ;
     in
-      import ../_helpers/shell-hook/clam.nix { inherit cavern rump; }
+      import ../_helpers/shell-hook/clam.nix { inherit /*rump*/ cavern; }
   ;
 
 #    ####################################################################

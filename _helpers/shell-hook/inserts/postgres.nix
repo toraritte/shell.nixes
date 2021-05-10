@@ -23,8 +23,8 @@ then
   pg_ctl initdb -D  $PGDATA
 
   ######################################################
-  # PORT ALREADY IN USE
-  ######################################################
+  # "port already in use"
+  # ====================================================
   # If another `nix-shell` is  running with a PostgreSQL
   # instance,  the logs  will show  complaints that  the
   # default port 5432  is already in use.  Edit the line
@@ -113,4 +113,17 @@ pg_ctl                                                  \
   -o "-c log_min_error_statement=info"                  \
   -o "-c log_connections=on"                            \
   start
+
+####################################################################
+# Stop PostgreSQL when exiting `nix-shell`
+# ==================================================================
+# See ../README.md for the specifics and/or the last comment section
+# in ../clam.nix.
+####################################################################
+
+stop_postgres() {
+  pg_ctl -D $PGDATA stop
+}
+
+add_cleanup_callback_name "stop_postgres"
 ''
