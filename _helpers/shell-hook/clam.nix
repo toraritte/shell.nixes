@@ -84,6 +84,10 @@
     #         :
     #   * ''${#an_array[@]} returns the LENGTH  of an array
     #
+    #   * To assign an array to another variable:
+    #
+    #         array_copy=("''${an_array[@]}")
+    #
     #   * Arrays and functions:
     #     https://askubuntu.com/questions/674333/how-to-pass-an-array-as-function-argument
     #

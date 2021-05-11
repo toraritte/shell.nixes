@@ -1,16 +1,19 @@
-[`clam.nix`](./clam.nix) is for modularizing shell hooks in Nix expressions called with `nix-shell` (usually stored in `shell.nix` files).
+## 1. Introduction
+
+[`clam.nix`][4] is for modularizing shell hooks in [Nix expressions][2] that are to be called with [`nix-shell`][1] (usually stored in `shell.nix` files). (See more on [shell hooks][3].) The body of the [`clam.nix`][4] function is a string template and the input attributes enable plugging in custom attributes at specific stages of its execution.
+
+For example, taking the reference usage demonstrated in [`elixir-phoenix-postgres/shell.nix`](../../elixir-phoenix-postgres/shell.nix) (see [its README](../../elixir-phoenix-postgres/README.md)), a sub-shell will be set up for a Phoenix (an Elixir web framework) project, with the required language packages and a PostgreSQL instance running in the background (**actions phase** TODO:link), all of which will be cleaned up upon exiting the shell (i.e., packages deleted, database stopped, etc.).
+
+[1]: https://nixos.org/manual/nix/stable/#name-2
+[2]: https://nixos.org/manual/nix/stable/#chap-writing-nix-expressions
+[3]: https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#shellhook-or-nix-shell-shell-hook
+[4]: ./clam.nix
 
 <sup>The idea itself was suggested by @SRGOM in [issue #1](https://github.com/toraritte/shell.nixes/issues/1), but instead of modularizing shell scripts themselves (e.g., [like this](https://stackoverflow.com/questions/8352851/how-to-call-one-shell-script-from-another-shell-script)), decided to solve it with the Nix language using `import`s.</sup>
 
-See [list of pre-requisite concepts](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#-pre-requisite-concepts) at the bottom.
+## 2. Phases of [`clam.nix`][4] and the input attributes controlling them
 
-## 1. How to use
-
-The reference usage of [`clam.nix`](./clam.nix) is demonstrated in [`elixir-phoenix-postgres/shell.nix`](../../elixir-phoenix-postgres/shell.nix).
-
-## 2. How [`clam.nix`](./clam.nix) works
-
-[`clam.nix`](./clam.nix) is a Nix expression function that expects an attribute set in the form of
+The [`clam.nix`](./clam.nix) [Nix expression][2] function expects an [attribute set](https://nixos.org/manual/nix/stable/#idm140737322000880) in the form of
 
 ```nix
 { nixShellDataDir ? ".nix-shell"
@@ -18,6 +21,12 @@ The reference usage of [`clam.nix`](./clam.nix) is demonstrated in [`elixir-phoe
 , rump ? ""
 }:
 ```
+
+where
+
+  + `nixShellDataDir` (**default value:** `.nix-shell`) is a string with the name of a temporary directory holding the files supporting the new environment (e.g., language packages, database files, configuration files)
+
+  + `cavern` (**no default value**, hence mandatory) 
 
 (See [2.2 `clam.nix` parameters](https://github.com/toraritte/shell.nixes/tree/main/_helpers/shell-hook#22-clamnix-parameters) section below.)
 
@@ -89,6 +98,7 @@ For example, if a database instance has been started previously, it will keep ru
 
 ### 2.2 [`clam.nix`](./clam.nix) parameters
 
+TODO; type signature
 ```nix
 { nixShellDataDir ? ".nix-shell"
 , cavern
@@ -136,7 +146,7 @@ TODO
 
 <sup>I believe that [`nix-shell`'s Nix manual entry](https://nixos.org/manual/nix/stable/#name-2) is grossly over-simplified, and its behaviour does raise [questions](https://hyp.is/nFTgRHFyEeunHQ9ZFhBBmA/toraritte.github.io/saves/Nix-Package-Manager-Guide-Version-2.3.10.html).</sup>
 
-### `shellHook` or `nix-shell` shell hook
+### `nix-shell` shell hook (or `shellHook`)
 
 From [`nix-shell`'s Nix manual entry](https://nixos.org/manual/nix/stable/#name-2):
 
