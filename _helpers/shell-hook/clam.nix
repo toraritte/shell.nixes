@@ -28,16 +28,14 @@
   mkdir ${nixShellDataDir}
   export NIX_SHELL_DIR=$PWD/${nixShellDataDir}
 
-  # ( The   whole  CLEAN_UP_CALLBACK_NAMES   and
-  #   CLEANUP_CALLBACKS_ARRAY   shenanigans   is
-  #   because bash arrays  cannot be `export`ed,
-  #   hence this dirty workaround;
-  #   see ../README.md about "cleanup callbacks".
+  # ( Please  see  ../README.md  about  this;
+  #   search for either variables.
   # )
-  export CLEAN_UP_CALLBACK_NAMES=""
+  export CLEANUP_CALLBACK_NAMES=""
+  CLEANUP_CALLBACKS=()
 
   add_cleanup_callback_name() {
-    CLEAN_UP_CALLBACK_NAMES+=" $1"
+    CLEANUP_CALLBACK_NAMES+=" $1"
   }
 
   ####################################################################
@@ -79,10 +77,21 @@
     # + https://stackoverflow.com/questions/20361398/bash-array-of-functions
     # + https://stackoverflow.com/questions/1951506/add-a-new-element-to-an-array-without-specifying-the-index-in-bash
     #
-    # Reminders:
+    # Bash array recap:
+    # https://www.gnu.org/software/bash/manual/html_node/Arrays.html
     #
-    #   * the ! in the variable expansion in `for` is important
-    #     (i.e., "''${!arr_of_funs[@]}")
+    #   * ''${!an_array[@]} returns the INDICES of an array
+    #         :
+    #   * ''${#an_array[@]} returns the LENGTH  of an array
+    #
+    #   * Arrays and functions:
+    #     https://askubuntu.com/questions/674333/how-to-pass-an-array-as-function-argument
+    #
+    #         a_fun() {
+    #           array=($@)
+    #         }
+    #
+    #         a_fun "''${an_array[@]}"
     #
     #   *   ''${arr_of_funs[$i]}   (the literal string at "i" index
     #                               i.e., name of the function here)
@@ -91,48 +100,71 @@
     #      "''${arr_of_funs[$i]}"  (executing the function that has
     #                               the name of the string at index i)
     #
+    #   * https://serverfault.com/questions/477503/check-if-array-is-empty-in-bash
+    #
     # SPLIT STRINGS INTO ARRAYS
     # ====================================================
     # https://stackoverflow.com/questions/10586153/how-to-split-a-string-into-an-array-in-bash
     ######################################################
 
-  IFS=' ' read -r -a CLEANUP_CALLBACKS_ARRAY <<< $CLEAN_UP_CALLBACK_NAMES
+  IFS=' ' read -r -a CLEANUP_CALLBACKS_ARRAY <<< $CLEANUP_CALLBACK_NAMES
 
   run_cleanup_callbacks() {
-    echo "The following cleanup callbacks will run:"
-    printf '+ %s\n' "''${CLEANUP_CALLBACKS_ARRAY[@]}"
-    echo
 
-    for i in "''${!CLEANUP_CALLBACKS_ARRAY[@]}"
-    do
-      echo "=== "''${CLEANUP_CALLBACKS_ARRAY[$i]}" ======="
-      "''${CLEANUP_CALLBACKS_ARRAY[$i]}"
+    CALLBACK_ARRAY=("$@")
+
+    if [ ''${#CALLBACK_ARRAY[@]} -eq 0 ]
+    then
+      # Chose "success" code because no callbacks present is
+      # not an erroneous condition; it only means that there
+      # is nothing to clean up
+      # https://tldp.org/LDP/abs/html/exitcodes.html
+      echo "nothing here"
       echo
-    done
+      return 0
+    else
+      echo "The following cleanup callbacks will run:"
+      printf '+ %s\n' "''${CALLBACK_ARRAY[@]}"
+      echo
+
+      for i in "''${!CALLBACK_ARRAY[@]}"
+      do
+        echo "=== "''${CALLBACK_ARRAY[$i]}" ======="
+        "''${CALLBACK_ARRAY[$i]}"
+        echo
+      done
+    fi
   }
 
-
-  trap \
-    "
+  clean_up() {
   ''
 + rump
 + ''
-      ######################################################
-      # Run clean-up callbacks
-      ######################################################
+    echo '####################################'
+    echo '### RUN WORKAROUND CALLBACKS #######'
+    echo '####################################'
+    echo
+    run_cleanup_callbacks "''${CLEANUP_CALLBACKS_ARRAY[@]}"
 
-      run_cleanup_callbacks
+    echo '####################################'
+    echo '### RUN REGULAR ARRAY CALLBACKS ####'
+    echo '####################################'
+    echo
+    run_cleanup_callbacks "''${CLEANUP_CALLBACKS[@]}"
 
-      ######################################################
-      # Delete `${nixShellDataDir}` directory
-      # ----------------------------------
-      # The first  step is going  back to the  project root,
-      # otherwise `${nixShellDataDir}`  won't get deleted.  At least
-      # it didn't for me when exiting in a subdirectory.
-      ######################################################
+    ######################################################
+    # Delete `${nixShellDataDir}` directory
+    # ----------------------------------
+    # The first  step is going  back to the  project root,
+    # otherwise `${nixShellDataDir}`  won't get deleted.  At least
+    # it didn't for me when exiting in a subdirectory.
+    ######################################################
 
-      cd $PWD
-      rm -rf $NIX_SHELL_DIR
-    " \
+    cd $PWD
+    rm -rf $NIX_SHELL_DIR
+  }
+
+  trap \
+    clean_up \
     EXIT
   ''

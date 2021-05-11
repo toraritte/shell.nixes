@@ -22,24 +22,40 @@ pkgs.mkShell {
     let
       cavern =
           import ../_helpers/shell-hook/inserts/postgres.nix
-        + import ../_helpers/shell-hook/inserts/mix.nix
-        # + ''
-        #   test_callback() { echo "works!"; }
-        #   add_cleanup_callback_name "test_callback"
-        #   ''
+        +
+          import ../_helpers/shell-hook/inserts/mix.nix
+        +
+          ''
+          workaround_callback_1() { echo "workaround 1 works"; }
+          add_cleanup_callback_name "workaround_callback_1"
+          ''
+        +
+          ''
+          workaround_callback_2() { echo "workaround 2 works"; }
+          add_cleanup_callback_name "workaround_callback_2"
+          ''
+        +
+          ''
+          regular_array_callback_1() { echo "regular 1 works too"; }
+          CLEANUP_CALLBACKS+=( "regular_array_callback_1" )
+          ''
+        +
+          ''
+          regular_array_callback_2() { echo "regular 2 works too"; }
+          CLEANUP_CALLBACKS+=( "regular_array_callback_2" )
+          ''
       ;
-      # rump =
-      #   ''
-      #   echo
-      #   echo '==========================='
-      #   echo \"Arbitrary actions  here but\"
-      #   echo \"watch the double-quotes!\"
-      #   echo '==========================='
-      #   echo
-      #   ''
-    # ;
+      rump =
+        ''
+        echo
+        echo "======================"
+        echo "Arbitrary actions here"
+        echo "======================"
+        echo
+        ''
+    ;
     in
-      import ../_helpers/shell-hook/clam.nix { inherit /*rump*/ cavern; }
+      import ../_helpers/shell-hook/clam.nix { inherit rump cavern; }
   ;
 
 #    ####################################################################

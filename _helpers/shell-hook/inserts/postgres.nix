@@ -125,5 +125,7 @@ stop_postgres() {
   pg_ctl -D $PGDATA stop
 }
 
-add_cleanup_callback_name "stop_postgres"
+# Both works:
+  CLEANUP_CALLBACKS+=("stop_postgres")
+# add_cleanup_callback_name "stop_postgres"
 ''
