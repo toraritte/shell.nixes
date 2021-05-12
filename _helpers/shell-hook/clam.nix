@@ -1,6 +1,6 @@
 { nixShellDataDir ? ".nix-shell"
-, cavern
-, rump ? ""
+, cavern          ? ""
+, rump            ? ""
 }:
 
 # It is important putting  `cavern` (i.e., the body of
@@ -26,13 +26,44 @@
   # Create a diretory for the generated artifacts ...
 
   mkdir ${nixShellDataDir}
+
+  # Technically (to the best of  my knowledge) it is not
+  # necessary to export NIX_SHELL_DIR because this shell
+  # script will be run in the new sub-shell therefore it
+  # would be  in scope even  in a variable (just  as the
+  # CLEANUP_CALLBACKS  array) but  it  may  be a  proper
+  # thing to  do; who knows,  there may be a  setup that
+  # needs additional sub-shells.
+
   export NIX_SHELL_DIR=$PWD/${nixShellDataDir}
 
-  # ( Please  see  ../README.md  about  this;
-  #   search for either variables.
-  # )
-  export CLEANUP_CALLBACK_NAMES=""
+  # The    CLEANUP_CALLBACK_NAMES    string   and    the
+  # CLEANUP_CALLBACKS  array provide  two mechanisms  to
+  # register callbacks  to be run in  the clean-up phase
+  # (see 3. CLEAN-UP section below); both are equivalent
+  # in terms of results.
+
   CLEANUP_CALLBACKS=()
+
+  # HISTORICAL NOTE:
+  # 
+  # This has been  added when I could not  get arrays to
+  # work,  and thought  that it  is because  `nix-shell`
+  # will  only start  the new  sub-shell after  sourcing
+  # this  script -  and  arrays cannot  be exported.  So
+  # added  this function  to  collect  all the  callback
+  # names in a  string, which *can* be  exported, and it
+  # is later  broken up  into an  array in  the clean-up
+  # phase (see 3. CLEAN-UP section below).
+  # 
+  # This  notion   was  not  bad  but   was  idiotically
+  # implemented (the  split and conversion was  not even
+  # put in  the `trap`  section but it  is part  of  the
+  # same  body  of  script therefore  nothing  has  been
+  # changed. As it turns out, I  just had no clue how to
+  # deal with arrays; see extensive reminders below.
+
+  export CLEANUP_CALLBACK_NAMES=""
 
   add_cleanup_callback_name() {
     CLEANUP_CALLBACK_NAMES+=" $1"
