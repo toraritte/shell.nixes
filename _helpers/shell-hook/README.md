@@ -2,7 +2,7 @@
 
 [`clam.nix`] is for modularizing _shell hooks_ TODO link in [Nix expressions] (usually stored in `shell.nix` files) that are to be used with the [`nix-shell`] command line tool. The body of the [`clam.nix`] function is a shell script template, and the input attributes enable plugging in custom shell commands at specific stages TODO link of its execution.
 
-For example, taking the reference usage demonstrated in [`elixir-phoenix-postgres/shell.nix`](../../elixir-phoenix-postgres/shell.nix) (see [its README](../../elixir-phoenix-postgres/)), a sub-shell will be set up for a [Phoenix (an Elixir web framework)](https://www.phoenixframework.org/) project, with the required language packages and a PostgreSQL instance running in the background (**actions phase** TODO:link), all of which will be cleaned up upon exiting the shell (i.e., packages deleted, database stopped, etc.). Another example is [setting up `git secret`][discourse_git_secret].
+For example, taking the reference usage demonstrated in [`elixir-phoenix-postgres/shell.nix`] \(see [its README](../../elixir-phoenix-postgres/)), a sub-shell will be set up for a [Phoenix (an Elixir web framework)](https://www.phoenixframework.org/) project, with the required language packages and a PostgreSQL instance running in the background (**actions phase** TODO:link), all of which will be cleaned up upon exiting the shell (i.e., packages deleted, database stopped, etc.). Another example is [setting up `git secret`][discourse_git_secret].
 
 [`nix-shell`]:
   https://nixos.org/manual/nix/stable/#name-2
@@ -29,12 +29,18 @@ For example, taking the reference usage demonstrated in [`elixir-phoenix-postgre
   "Description of `clam.nix` input attributes"
 
 [`./inserts/postgres.nix`]:
-  ./\_helpers/shell-hook/inserts/postgres.nix
+  ./inserts/postgres.nix
+  "A clam.nix insert or shell script module"
+
+[`elixir-phoenix-postgres/shell.nix`]:
+  ../../elixir-phoenix-postgres/shell.nix
+  "shell.nix to set up a web dev environment for a Phoenix project"
 
 <sup>The idea itself was suggested by @SRGOM in [issue #1](https://github.com/toraritte/shell.nixes/issues/1), but instead of modularizing shell scripts themselves (e.g., [like this](https://stackoverflow.com/questions/8352851/how-to-call-one-shell-script-from-another-shell-script)), decided to solve it with the Nix language using `import`s.</sup>
 
 ## 2. Phases of the [`clam.nix`] shell script template and the input attributes controlling them
 
+<span id="clam_nix_params">where</span>
 The [`clam.nix`] function expects an [attribute set] in the form of
 
 ```nix
@@ -44,7 +50,7 @@ The [`clam.nix`] function expects an [attribute set] in the form of
 }:
 ```
 
-<span id="clam_nix_params">where</span>
+where
 
   + `nixShellDataDir` (**default value:** `.nix-shell`)
   > is a **string** used to name of a temporary directory that will be created in the directory where the Nix expression is invoked with [`nix-shell`]; see setup phase (TODO link)
@@ -98,19 +104,29 @@ The items in parentheses refer to attribute names in the `clam.nix` function's i
 
 1. Creates a temporary directory (set by [`nixShellDataDir`, see above][clam_nix_params])
 
-  Used to store application-specific data, instead of having those scattered around in the system (e.g., in the user's home directory, `/run`, etc.); it will be deleted when exiting the shell (see **1.3 Clean-up** TODO link section).
+   > Used to store application-specific data, instead of having those scattered around in the system (e.g., in the user's home directory, `/run`, etc.); it will be deleted when exiting the shell (see **1.3 Clean-up** TODO link section).
+   > 
+   > Examples of application specific data:
+   > 
+   > + language modules (e.g., [Mix-related files for Elixir](./_helpers/shell-hook/inserts/mix.nix), [Node.js modules](https://unix.stackexchange.com/a/482026/85131) etc.)
+   > 
+   > + runtime and configuration files (e.g., see comment on `unix_socket_directories`<sup>† TODO link</sup> in [`./inserts/postgres.nix`])
+   >
+   > + (what else?)
 
 2. Makes the path of the temporary directory available in the `NIX_SHELL_DIR` environment variable in the new sub-shell created by [`nix-shell`]
 
-  `NIX_SHELL_DIR` can then be used in custom shell commands (see example usage in [`./inserts/postgres.nix`] for example).
+   > `NIX_SHELL_DIR` can then be used in custom shell commands (see example usage in [`./inserts/postgres.nix`] for example).
 
-3. Set up empty CLEANUP_CALLBACKS array to register callback functions to be run in the **clean-up phase** TODO link.
+3. Set up empty `CLEANUP_CALLBACKS` array to register callback functions to be run in the **clean-up phase** TODO link. (See 2.3 Clean-up callbacks section TODO link)
 
 #### 2.1.2 Actions phase
 
-> **Default actions:** None
+This phase has **no** default actions, and the [`cavern` input attribute][clam_nix_params] is an empty string by default - so without any user-specified actions this phase will be skipped, and the **clean-up phase** TODO link will commence.
 
-Set up development environment (by including custom shell commands in `cavern`; see **2.2.2 `cavern`**) for your specific language or framework or customize the shell for your purpose. (E.g., start a database instance, set environment variables, download language packages, etc.)
+
+
+<sup>[`elixir-phoenix-postgres/shell.nix`] provides the reference usage for [`clam.nix`].</sup>
 
 #### 2.1.3 Clean-up phase
 
@@ -130,39 +146,17 @@ For example, if a database instance has been started previously, it will keep ru
 
 <sup>Not unsetting environment variables is alright, because `nix-shell` starts a sub-shell so these will go out of scope when leaving; [`nix shell` may be another matter though](https://github.com/NixOS/nix/issues/4715).</sup>
 
-### 2.2 [`clam.nix`] parameters
+### 2.2 Inserts
 
-TODO; type signature
-```nix
-{ nixShellDataDir ? ".nix-shell"
-, cavern
-, rump ? ""
-}:
-```
+(i.e., the contents of the [`./inserts/`](./inserts) script snippets directory)
 
-#### 2.2.1 `nixShellDataDir` :: String (default: `.nix-shell`)
+Inserts are just string [Nix expressions] that evaluate to shell commands pertaining to a specific topic or tool; they are basically modules that can be plugged into a `shell.nix` on demand. The main rationale behind [`clam.nix`] was to promote re-use of parts of shell hooks.
 
-The name of the temporary directory created in the **setup phase** (see sections **2. How clam.nix works** and **2.1 Setup** below) when entering the Nix shell to store application-specific data, instead of having those scattered around in the system (e.g., in the user's home directory, `/run`, etc.). This temporary directory will be deleted when exiting the shell (see **1.3 Clean-up** section).
+For example, [`elixir-phoenix-postgres/shell.nix`] sets up an development environment for an Elixir web framework, and it spins up a PostgreSQL server via the [`./inserts/postgres.nix`] insert. This script could have been used for a Python or Go web project just as easily.
 
-Examples of application specific data:
+TODO link to Nix strings, explain .nix files, import, or just add string directly, sho extending postgres.nix in elixir shell.nix, go into clean up callbacks and elaborate the pros of including them in inserts (self-contained scripts that clean up after themselves). Add direnv to the mix (i.e., include that fora  specific project, but these shell.nix templates good for starting out with a new project)
 
-+ language modules (e.g., [Mix-specific files for Elixir](./_helpers/shell-hook/inserts/mix.nix), [Node.js modules](https://unix.stackexchange.com/a/482026/85131) etc.)
-
-+ runtime (configuration) files (e.g., see comment on `unix_socket_directories`<sup>†</sup> in the [`postgres.nix`](./_helpers/shell-hook/inserts/postgres.nix))
-
-<sup>† There is a [difference between Unix and TCP/IP sockets](https://serverfault.com/questions/124517/what-is-the-difference-between-unix-sockets-and-tcp-ip-sockets) and not all Unix sockets are files (see [wiki](https://en.wikipedia.org/wiki/Unix_domain_socket#:~:text=Unix%20domain%20sockets%20may%20use,by%20opening%20the%20same%20socket.) and [this question](https://unix.stackexchange.com/questions/116563/is-there-a-file-for-each-socket)).</sup>
-
-#### 2.2.2 `cavern` :: String
-
-Accepts a string that contains valid shell commands; see **2.1.2 Actions phase** for more.
-
-#### 2.2.3 `rump` :: String (default: `""`)
-
-Accepts a string that contains valid shell commands; see **2.1.2 Clean-up phase** for more.
-
-### 2.3 Inserts (i.e., the contents of the `./inserts/` directory)
-
-A collection of generic shell script snippets that I've been re-using between different environments. For example, [./inserts/postgres.nix](./inserts/postgres.nix) spins up a PostgreSQL server (which works just the same for an Elixir project as for a Python one).
+### 2.3 Clean-up callbacks
 
 ## ∞. Pre-requisite concepts <sup>(work in progress)</sup>
 
@@ -194,4 +188,7 @@ Shell hooks (in this context) are shell scripts executed once before entering th
 > will cause `nix-shell` to print "Hello shell".
 
 + [How to execute a script once during the shell build?][discourse_git_secret]
+
+
+[†] There is a [difference between Unix and TCP/IP sockets](https://serverfault.com/questions/124517/what-is-the-difference-between-unix-sockets-and-tcp-ip-sockets) and not all Unix sockets are files (see [wiki](https://en.wikipedia.org/wiki/Unix_domain_socket#:~:text=Unix%20domain%20sockets%20may%20use,by%20opening%20the%20same%20socket.) and [this question](https://unix.stackexchange.com/questions/116563/is-there-a-file-for-each-socket)).
 

@@ -23,6 +23,12 @@ pkgs.mkShell {
       cavern =
           import ../_helpers/shell-hook/inserts/postgres.nix
         +
+          ''
+          # Extend `postgres.nix` with project-specific
+          # database commands.
+          # (e.g., user, control flags, etc.)
+          ''
+        +
           import ../_helpers/shell-hook/inserts/mix.nix
         +
           ''
