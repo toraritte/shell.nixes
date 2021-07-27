@@ -16,6 +16,8 @@ Mostly Nix expressions (only one at the moment, to be precise) to promote code r
     nix-shell -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/deno-shell.nix")'
   ```
 
++ **_Definitely take a look at the comments in [deno-shell.nix](./deno-shell.nix)!_**
+
 + **_call `nix-shell` on a package that is not in the Nixpkgs repo_**
 
   That is, kind of like `nix-shell -p` but that can only be called on Nixpkgs packages (as far as I know).
@@ -25,7 +27,7 @@ Mostly Nix expressions (only one at the moment, to be precise) to promote code r
   ```shell
   nix-shell -p '(callPackage (fetchTarball https://github.com/DavHau/mach-nix/tarball/3.0.2) {}).mach-nix'
   ```
-  
+
   #### Nix flakes
   
   That is, if 
