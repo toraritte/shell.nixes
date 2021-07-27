@@ -3,16 +3,18 @@
 > [`shell.nix`](./shell.nix), with lots  of details in
 > the comments.
 
+`clam-shell.nix` is an experiment to modularize `shell.nix`es in this repo, and is subject to break at the moment. `shell.nix` is the original, old-school one that I use in production for now.
+
 ## 0. Start
 
 ```text
 $ nix-shell
 ```
 
-This will  drop to a  shell with Elixir  1.9, Erlang
-R21, Phoenix 1.4.9, and  PostgreSQL installed, and a
+This will  drop to a  shell with Elixir, Erlang, Phoenix, and  PostgreSQL installed, and a
 latter server  will already  be spun up.  From there
 one can use all the familiar Mix commands.
+(See `shell.nix`es for the version numbers.)
 
 A  `.nix-shell` folder  will  be  created that  will
 contain all  PostgreSQL- and Mix-related  files with
