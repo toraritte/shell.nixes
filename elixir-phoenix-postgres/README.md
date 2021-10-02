@@ -50,7 +50,55 @@ there.
 
 ### 0.2 Possible issues
 
-#### 0.2.0 Another server already running ("port 5432 already in use")
+If the issue is with not being able to connect to PostgreSQL, definitely try these:
+
++ https://gist.github.com/toraritte/f8c7fe001365c50294adfe8509080201#file-configure-postgres-to-allow-remote-connection-md
+
++ https://stackoverflow.com/questions/24504680/connect-to-postgres-server-on-google-compute-engine
+
++ https://stackoverflow.com/questions/47794979/connecting-to-postgres-server-on-google-compute-engine
+
+#### 0.2.0 `psql: error: could not connect to server: No such file or directory`
+
+Full error message:
+
+```
+psql: error: could not connect to server: No such file or directory
+        Is the server running locally and accepting
+        connections on Unix domain socket "/run/postgresql/.s.PGSQL.5432"?
+```
+
+I spend about 30-60 minutes each year debugging this issue, so finally adding this section as a reminder to self.
+
+First off, check if PostgreSQL is running (which is highly likely):
+
+1. By filtering `ps`:
+   ```
+   $ ps ax | grep postgres
+   20777 ?        Ss     0:00 /nix/store/n4j3p6qq48292kr3ri7kgm7ldvm74mzi-postgresql-13.4/bin/postgres -D /home/toraritte/clones/shell.nixes/lofa/.nix-shell/db -c unix_socket_directories=/home/toraritte/clones/shell.nixes/lofa/.nix-shell/db -c listen_addresses=* -c log_destination=stderr -c logging_collector=on -c log_directory=log -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log -c log_min_messages=info -c log_min_error_statement=info -c log_connections=on
+   20779 ?        Ss     0:00 postgres: logger
+   20782 ?        Ss     0:00 postgres: checkpointer
+   20783 ?        Ss     0:00 postgres: background writer
+   20784 ?        Ss     0:00 postgres: walwriter
+   20785 ?        Ss     0:00 postgres: autovacuum launcher
+   20786 ?        Ss     0:00 postgres: stats collector
+   20787 ?        Ss     0:00 postgres: logical replication launcher
+   21503 pts/18   S+     0:00 ag --hidden postgres
+   ```
+
+2. or via `netcat`:
+
+   ```
+   $ nc -zv localhost 5432
+   Connection to localhost (::1) 5432 port [tcp/postgresql] succeeded!
+   
+   ```
+
+If PostgreSQL is running, the usually the solution is using `-h localhost`, `--host=localhost`, `-h $PGDATA`, or `--host=$PGDATA` with every PostgreSQL command (e.g., `psql`, `createdb`). (All the listed forms are equivalent.)
+
+The answer lies somewhere in [`man psql`](https://www.postgresql.org/docs/13/app-psql.html) and [19.1. The pg_hba.conf File](https://www.postgresql.org/docs/9.1/auth-pg-hba-conf.html) but forgot to write it down years ago when I figured it out...
+
+#### 0.2.1 Another server already running ("port 5432 already in use")
 
 > TODO
 >
@@ -80,11 +128,25 @@ there.
 
    ```
    $ psql --host=$PGDATA --username=your_username --dbname=db_name --port=5433
+
+   # This will usually suffice for testing:
+   $ psql --host=$PGDATA --username=$(whoami) --dbname=$(whoami) --port=5433
    ```
 
    See the [`psql` doc](https://www.postgresql.org/docs/current/app-psql.html) for more.
 
-#### 0.2.1 Starting `phx.server` results in `port: 4000]) for reason :eaddrinuse (address already in use)`
+#### 0.2.2 `psql: error: FATAL:  database "db_name" does not exist`
+
+Using [1.3. Creating a Database](https://www.postgresql.org/docs/current/tutorial-createdb.html) with `-h | --host`:
+
+```
+$ createdb db_name --host=$PGDATA
+
+# or
+$ createdb $(whoami) --host=$PGDATA
+```
+
+#### 0.2.2 Starting `phx.server` results in `port: 4000]) for reason :eaddrinuse (address already in use)`
 
 Another server  is already  running on  the machine,
 hence port 4000 is taken.  Either stop that, or edit
