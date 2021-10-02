@@ -6,13 +6,30 @@
 # section).
 ####################################################################
 
-{ pkgs ? import ~/clones/nixpkgs {} }:
+# The downloaded archive will be (temporarily?) housed in the Nix store
+# e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
+# (Try any of the `fetchTarball` commands  below  in `nix repl`, and it
+#  will print out the path.)
+let
+  # Nixpkgs commit info used for pinning:
+  # Oct 1, 2021, 8:37 PM EDT
+  # https://github.com/NixOS/nixpkgs/tree/751ce748bd1ebac94442dfeaa8bc3f100d73a9f6
+  nixpkgs_commit = "751ce748bd1ebac94442dfeaa8bc3f100d73a9f6";
+  pinned_nixpkgs =
+    import
+      ( builtins.fetchTarball "https://github.com/nixos/nixpkgs/tarball/${nixpkgs_commit}" )
+      { config = {}; overlays = []; }
+  ;
+in
+{ pkgs ? pinned_nixpkgs }:
 
 pkgs.mkShell {
 
   buildInputs = with pkgs; [
-    beam.packages.erlangR22.elixir_1_9
-    postgresql_11
+    # beam.packages.erlangR22.elixir_1_9
+    elixir
+    # postgresql_11
+    postgresql
     nodejs-12_x
     git
     inotify-tools
