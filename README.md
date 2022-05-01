@@ -1,3 +1,7 @@
+TODO: This repo is huge mess...
+
+---
+
 Each folder has their specific README, but the source files are heavily commented as well, in case it is missing. If you still have any questions, or have suggestions, please feel free to open an issue, PR, or track me down any other way.
 
 ---

@@ -10,18 +10,39 @@
 # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
 # (Try any of the `fetchTarball` commands  below  in `nix repl`, and it
 #  will print out the path.)
+
+# Nixpkgs commit info used for pinning:
+# Oct 1, 2021, 8:37 PM EDT
+# https://github.com/NixOS/nixpkgs/tree/751ce748bd1ebac94442dfeaa8bc3f100d73a9f6
+
+# TODO/QUESTION Re-wrote this to be able to pin "pkgs"
+# to different NixOS/nixpkgs  commits from the command
+# line (using `nix-shell  --arg pkgs \"commit-hash\"`)
+# as I  have no clue what  to add on the  terminal for
+# this:
+# 
+# ```
+# { pkgs ? pinned_nixpkgs }:
+# ```
+# 
+# How do I combine
+# 
+# ```
+#  nix-shell -E 'import (builtins.fetchurl "https://github.com/nixos/nixpkgs/tarball/<commit>")'
+# ```
+# 
+# with `--arg`?
+
+{ nixpkgs_commit ? "751ce748bd1ebac94442dfeaa8bc3f100d73a9f6" }:
+
 let
-  # Nixpkgs commit info used for pinning:
-  # Oct 1, 2021, 8:37 PM EDT
-  # https://github.com/NixOS/nixpkgs/tree/751ce748bd1ebac94442dfeaa8bc3f100d73a9f6
-  nixpkgs_commit = "751ce748bd1ebac94442dfeaa8bc3f100d73a9f6";
-  pinned_nixpkgs =
+  pkgs =
     import
       ( builtins.fetchTarball "https://github.com/nixos/nixpkgs/tarball/${nixpkgs_commit}" )
       { config = {}; overlays = []; }
   ;
 in
-{ pkgs ? pinned_nixpkgs }:
+
 
 pkgs.mkShell {
 
