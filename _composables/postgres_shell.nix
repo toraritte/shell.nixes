@@ -1,11 +1,3 @@
-####################################################################
-# Importing a cloned Nixpkgs repo  (from my home directory), because
-# the latest channels don't have Elixir 1.9.
-# See https://nixos.org/nix/manual/#idm140737317975776 for the meaning
-# of `<nixpkgs>` and `~` in Nix expressions (towards the end of that
-# section).
-####################################################################
-
 # The Nixpkgs commit used for pinning below is quite old,
 #
 #     Oct 1, 2021, 8:37 PM EDT
@@ -16,7 +8,7 @@
 #
 #     nix-shell \
 #       -v      \
-#       -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/elixir-phoenix-postgres/shell.nix")' \
+#       -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/_composables/postgres_shell.nix")' \
 #       --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
 #
 # The rules to compose "raw" GitHub links from the regular view page seems straightforward:
@@ -42,13 +34,7 @@ in
 pkgs.mkShell {
 
   buildInputs = with pkgs; [
-    # beam.packages.erlangR22.elixir_1_9
-    elixir
-    # postgresql_11
     postgresql
-    nodejs-12_x
-    git
-    inotify-tools
   ];
 
   shellHook = ''
@@ -65,13 +51,6 @@ pkgs.mkShell {
     ######################################################################
 
     export PGDATA=$NIX_SHELL_DIR/db
-
-    ####################################################################
-    # Put any Mix-related data in the project directory
-    ####################################################################
-
-    export MIX_HOME="$NIX_SHELL_DIR/.mix"
-    export MIX_ARCHIVES="$MIX_HOME/archives"
 
     ######################################################################
     # Clean up after exiting the Nix shell using `trap`.                 #
@@ -222,67 +201,13 @@ pkgs.mkShell {
       start
   '';
 
-    ####################################################################
-    # Install Node.js dependencies if not done yet.
-    ####################################################################
-
-    if test -d "$PWD/assets/" && ! test -d "$PWD/assets/node_modules/"
-    then
-      (cd assets && npm install)
-    fi
-
-    ####################################################################
-    # If $MIX_HOME doesn't exist, set it up.
-    ####################################################################
-
-    if ! test -d $MIX_HOME
-    then
-
-      ######################################################
-      # ...  but first,  test whether  there is  a `_backup`
-      # directory. Had issues with  installing Hex on NixOS,
-      # and Hex and  Phoenix can be copied  from there, just
-      # in case.
-      ######################################################
-
-      if test -d "$PWD/_backup"
-      then
-        cp -r _backup/.mix .nix-shell/
-      else
-        ######################################################
-        # Install Hex and Phoenix via the network
-        ######################################################
-
-        yes | mix local.hex
-        yes | mix archive.install hex phx_new
-      fi
-    fi
-
-    if test -f "mix.exs"
-    then
-      # These are not in the  `if` section above, because of
-      # the `hex` install glitch, it  could be that there is
-      # already a `$MIX_HOME` folder. See 2019-08-05_0553
-
-      mix deps.get
-
-      ######################################################
-      # `ecto.setup` is defined in `mix.exs` by default when
-      # Phoenix  project  is  generated via  `mix  phx.new`.
-      # It  does  `ecto.create`,   `ecto.migrate`,  and  run
-      # `priv/seeds`.
-      ######################################################
-      mix ecto.setup
-    fi
-  '';
-
-  ####################################################################
-  # Without  this, almost  everything  fails with  locale issues  when
-  # using `nix-shell --pure` (at least on NixOS).
-  # See
-  # + https://github.com/NixOS/nix/issues/318#issuecomment-52986702
-  # + http://lists.linuxfromscratch.org/pipermail/lfs-support/2004-June/023900.html
-  ####################################################################
+  ######################################################################
+  # Without  this, almost  everything  fails with  locale issues  when #
+  # using `nix-shell --pure` (at least on NixOS).                      #
+  # See                                                                #
+  # + https://github.com/NixOS/nix/issues/318#issuecomment-52986702    #
+  # + http://lists.linuxfromscratch.org/pipermail/lfs-support/2004-June#023900.html
+  ######################################################################
 
   LOCALE_ARCHIVE = if pkgs.stdenv.isLinux then "${pkgs.glibcLocales}/lib/locale/locale-archive" else "";
 }
