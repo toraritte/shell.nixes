@@ -1,6 +1,6 @@
-# WHAT'S THIS?
+# WHAT'S THIS? {{-
 # ====================================================
-
+#
 # An   experiment   to   see   if   I   could   create
 # a   Nix   expression   for   `nix-shell`   from   my
 # `configuration.nix` on NixOS. Not perfect, but it is
@@ -8,29 +8,20 @@
 # Home Manager or other Nix  setup files on any distro
 # where Nix can be installed.
 
-# ----------------------------------------------------
-
-# NOTE Why the `wrapper`? {{-
-
-# The `wrapper` shenanigans is  used to convey the Nix
-# expression's semantics in different context:
+# HOW I CALL IT
+# ====================================================
 #
-# + SHELL:
-#   Calling   `nix-shell`   without  arguments
-#   means  that  we  are  fine  with  whatever
-#   Nixpkgs   version  is   set  in   the  Nix
-#   shell expression,  but supplying  a commit
-#   hash   (using   `nix-shell  --arg   commit
-#   '"<hash>"'`)  means that  we  want to  pin
-#   Nixpkgs to that specific commit.
+# nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline_config.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
+
+# WHY THE `wrapper`?
+# ====================================================
 #
-# + NIX SHELL EXPRESSION:
-#   The `commit`  argument is really  either a
-#   string  or  an  attribute set  (i.e.,  the
-#   Nixpkgs  package set),  and  wanted to  be
-#   clear about this as  there are no types in
-#   Nix.  (Talking  about clarity,  a  comment
-#   would have probably sufficed...)
+# Wanted to  be able  to pass both  a string  (i.e., a
+# commit hash in  the Nixpkgs repo) and  a package set
+# as  well. The  `wrapper` function  is most  probably
+# superfluous  though as  I  could have  just put  the
+# conditional at the top, and I can't remember what my
+# original reasoning was.
 
 # ASIDE: wrapper: `let .. in ..` vs `() {}`
 # ====================================================
@@ -53,7 +44,7 @@
 
 # }}-
 
-{ commit ? import <nixpkgs> {} }:
+{ nixpkgs_commit ? import <nixpkgs> {} }:
 
 let
   wrapper =
@@ -319,7 +310,7 @@ let
           ''; # }}-
 
         vimrcConfig.packages.myVimPackage = with pkgs.vimPlugins; {
-          # loaded on launch
+          # Loaded on launch.
           start =
           [ # {{-
             commentary
@@ -333,8 +324,8 @@ let
             tabular
             undotree
             # vim-peekaboo
-            # Consider using fugitive's `:Gdiff :0` instead
-            # see https://stackoverflow.com/questions/15369499/how-can-i-view-git-diff-for-any-commit-using-vim-fugitive
+            #   Consider using fugitive's `:Gdiff :0` instead
+            #   see https://stackoverflow.com/questions/15369499/how-can-i-view-git-diff-for-any-commit-using-vim-fugitive
             # vim-signify
             vim-unimpaired
             vim-vinegar
@@ -350,19 +341,24 @@ let
             gruvbox-community
           ]; # }}-
 
-          # manually loadable by calling `:packadd $plugin-name`
-          # however, if a Vim plugin has a dependency that is not explicitly listed in
-          # opt that dependency will always be added to start to avoid confusion.
+          # Original comments from Vim-related sample configs
+          # (probably from nixos.wiki?):
+          #
+          # > manually loadable by calling `:packadd $plugin-name`
+          # > however, if a Vim plugin has a dependency that is not explicitly listed in
+          # > opt that dependency will always be added to start to avoid confusion.
+
           opt = [
           ];
-          # To automatically load a plugin when opening a filetype, add vimrc lines like:
-          # autocmd FileType php :packadd phpCompletion
+
+          # > To automatically load a plugin when opening a filetype, add vimrc lines like:
+          # > autocmd FileType php :packadd phpCompletion
         };
       };
     in
       pkgs.mkShell {
         buildInputs =
-        # Packages that work both on Linux and Mac
+        # Packages that work both on Linux and Mac.
         [
           myVim
           pkgs.elixir
@@ -372,7 +368,7 @@ let
           # TODO figure out how to configure it like VIM
           # https://discourse.nixos.org/t/is-it-possible-to-change-the-default-git-user-config-for-a-devshell/17612/7
           pkgs.git
-          # Needed for Git (see Git config below (search for `git.conf`)
+          # Needed for Git (see Git config below (search for `git.conf`).
           pkgs.delta
           pkgs.silver-searcher
           pkgs.ffmpeg
@@ -381,16 +377,17 @@ let
           pkgs.rclone
           pkgs.curl
           pkgs.openssh
-          # needed for `curl`; otherwise error 77 is thrown
+          # Needed for `curl`; otherwise error 77 is thrown;
           # see more at https://github.com/NixOS/nixpkgs/issues/66716
+          # .
           pkgs.cacert
-          # not sure about this one but can't hurt
+          # Not sure about this one, but can't hurt.
           pkgs.libxml2
           pkgs.par
           pkgs.which
           pkgs.less
         ]
-        # Packages that only work on Linux
+        # Packages that only work on Linux.
         ++ pkgs.lib.optionals
              pkgs.stdenv.isLinux
              [
@@ -398,7 +395,7 @@ let
                pkgs.inotify-tools
                # pkgs.busybox
              ]
-        # Packages that only work on Mac
+        # Packages that only work on Mac.
         ++ pkgs.lib.optionals
              pkgs.stdenv.isDarwin
              (with pkgs.darwin.apple_sdk.frameworks;
@@ -410,9 +407,9 @@ let
              );
 
         # ENVIRONMENT VARIABLES VS SHELL VARIABLES
-        # ----------------------------------------------------
+        # ====================================================
         # Variables  defined   outside  `shellHook`   will  be
-        # exported   implicitly,   thus   become   environment
+        # exported   implicitly,   thus becoming   environment
         # variables. Opted to include environment variables to
         # be added here before `shellHook` in case any of them
         # are also needed there.
@@ -422,18 +419,20 @@ let
         #          use `export` to  convert them to environment
         #          variables.
         #
-        # ANSWER: See next section.
+        # ANSWER: See last paragraph of next section.
 
-        # locale preservation (and notes) {{-
+        # LOCALE PRESERVATION (AND NOTES) {{-
         # ====================================================
-
-        # Without  this, almost  everything  fails with  locale issues  when
-        # using `nix-shell --pure` (at least on NixOS).
+        #
+        # Without  this, almost  everything  fails with  locale
+        # issues  when  using  `nix-shell --pure`  (at least on
+        # NixOS).
+        #
         # See
         # + https://github.com/NixOS/nix/issues/318#issuecomment-52986702
         # + http://lists.linuxfromscratch.org/pipermail/lfs-support/2004-June/023900.html
         #
-        # ( Also, this  variable needs  to be  here and  not in
+        # ( Also, this  variable needs   to be  here and  not in
         #   `shellHook`,  not only  because  it needs  to be  an
         #   environment variable, but also  because its value is
         #   determined by a Nix  expression. Although that could
@@ -450,9 +449,10 @@ let
         # The LOCALE_ARCHIVE  only ensure that `locale`  is in
         # scope  (I think),  but if  one wants  their specific
         # locale settings  to be available (or  preserve them,
-        # if on  the same system)  instead of falling  back to
+        # when on the same system) instead of falling  back to
         # POSIX  (which  will  happen  when  using  `nix-shell
         # --pure`), then
+        #
         # 1. Issue the `locale` command
         # 2. insert the output here:
 
@@ -666,6 +666,6 @@ let
             ''; # }}-
     };
 in
-  wrapper { maybeNixpkgsCommit = commit; }
+  wrapper { maybeNixpkgsCommit = nixpkgs_commit; }
 
-# vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0:
+# vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
