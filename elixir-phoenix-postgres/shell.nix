@@ -19,6 +19,10 @@
 #       -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/elixir-phoenix-postgres/shell.nix")' \
 #       --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
 #
+#  (And all that on one line:
+#  nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/_composables/postgres_shell.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
+#  )
+#
 # The rules to compose "raw" GitHub links from the regular view page seems straightforward:
 #
 #      https://github.com/               toraritte/shell.nixes/blob/main/elixir-phoenix-postgres/shell.nix

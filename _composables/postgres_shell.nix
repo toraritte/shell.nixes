@@ -1,3 +1,14 @@
+# Quickstart with PostgreSQL
+# ==========================
+#
+#     createdb $(whoami) --host=$PGDATA --port=5432
+#     psql --host=$PGDATA --username=$(whoami) --dbname=$(whoami) --port=5432
+#
+# `--port` is  only needed  when used  something other
+# than the default port of 5432.
+
+# ------------------------------------------------------------------------
+
 # The Nixpkgs commit used for pinning below is quite old,
 #
 #     Oct 1, 2021, 8:37 PM EDT
@@ -10,6 +21,10 @@
 #       -v      \
 #       -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/_composables/postgres_shell.nix")' \
 #       --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
+#
+#  (And all that on one line:
+#  nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/_composables/postgres_shell.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
+#  )
 #
 # The rules to compose "raw" GitHub links from the regular view page seems straightforward:
 #
