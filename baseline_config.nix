@@ -44,6 +44,14 @@
 
 # }}-
 
+# ISSUES {{-
+#
+# + Git auto-completion doesn't always work.
+#
+#   Weirdly, it worked on a  Ubuntu server in the cloud,
+#   but not on one (same version) on the local machine.
+#
+# }}-
 { nixpkgs_commit ? import <nixpkgs> {} }:
 
 let
