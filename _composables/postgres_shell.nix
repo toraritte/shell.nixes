@@ -7,8 +7,23 @@
 # `--port` is  only needed  when used  something other
 # than the default port of 5432.
 
-# ------------------------------------------------------------------------
+# ISSUES {{-
+#
+# + `pga_hba.conf` in here is super-insecure; tighten it
+#   up (or, at least, add notes for best practices).
+#
+# + QUESTION Currently,   after    running   this   Nix
+#            expression,  the  PostgreSQL superuser  is
+#            whoever the current user is.
+#   +-> Is this normal?
+#   +-> How is it set?
+#   +-> Did I influence this  with  any of the settings
+#      below?
+#
+# }}-
 
+# NOTE **Default `nixpkgs_commit` {{-
+#
 # The Nixpkgs commit used for pinning below is quite old,
 #
 #     Oct 1, 2021, 8:37 PM EDT
@@ -30,6 +45,8 @@
 #
 #      https://github.com/               toraritte/shell.nixes/blob/main/elixir-phoenix-postgres/shell.nix
 #      https://raw.githubusercontent.com/toraritte/shell.nixes/     main/elixir-phoenix-postgres/shell.nix
+#
+# }}-
 
 { nixpkgs_commit ? "751ce748bd1ebac94442dfeaa8bc3f100d73a9f6" }:
 
@@ -227,4 +244,4 @@ pkgs.mkShell {
   LOCALE_ARCHIVE = if pkgs.stdenv.isLinux then "${pkgs.glibcLocales}/lib/locale/locale-archive" else "";
 }
 
-# vim: set tabstop=2 shiftwidth=2 expandtab:
+# vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
