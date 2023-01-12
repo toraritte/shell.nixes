@@ -370,6 +370,7 @@ let
         [
           pkgs.unixtools.netstat
           pkgs.unzip
+          pkgs.zip
           pkgs.netcat
           myVim
           pkgs.elixir
