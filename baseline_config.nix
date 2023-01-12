@@ -368,8 +368,7 @@ let
         buildInputs =
         # Packages that work both on Linux and Mac.
         [
-          pkgs.unixtools
-          pkgs.netstat
+          pkgs.unixtools.netstat
           pkgs.unzip
           pkgs.netcat
           myVim
