@@ -8,26 +8,42 @@
 # Home Manager or other Nix  setup files on any distro
 # where Nix can be installed.
 
-# HOW I CALL IT
+# HOW TO CALL IT
 # ====================================================
 #
-# nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline_config.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
+# 1. The most direct way:
 #
-# or (based on https://discourse.nixos.org/t/why-does-the-same-nix-expression-behave-differently-in-different-nix-shell-calls/24620)
+#         nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
 #
-# getShell () { \
-#    nix-shell  -v \
-#   -E "import (builtins.fetchurl \
-#       \"https://raw.githubusercontent.com/toraritte/shell.nixes/$1/baseline_config.nix\")" \
-#   --argstr "nixpkgs_commit" "$2"; \
-# }
+# 2. Using a local shell function (from https://discourse.nixos.org/t/why-does-the-same-nix-expression-behave-differently-in-different-nix-shell-calls/24620):
 #
-# getShell () { nix-shell  -v -E "import (builtins.fetchurl \"https://raw.githubusercontent.com/toraritte/shell.nixes/$1/baseline_config.nix\")" --argstr "nixpkgs_commit" "$2"; }
+#         getShell () { \
+#            nix-shell  -v \
+#           -E "import (builtins.fetchurl \
+#               \"https://raw.githubusercontent.com/toraritte/shell.nixes/$1/baseline/baseline_config.nix\")" \
+#           --argstr "nixpkgs_commit" "$2"; \
+#         }
 #
-# + The 1st argument ($1) is either a commit hash of the repo or "main" to get the HEAD of the default branch.
-# + The 2nd argument ($2) is a commit hash from the NixOS/nixpkgs repo.
+#    This is duplication is intentional to make it easier to copy from the browswer.
 #
-# getShell "main" "832bdf74072489b8da042f9769a0a2fac9b579c7"
+#         getShell () { nix-shell  -v -E "import (builtins.fetchurl \"https://raw.githubusercontent.com/toraritte/shell.nixes/$1/baseline/baseline_config.nix\")" --argstr "nixpkgs_commit" "$2"; }
+#
+#    + The 1st argument ($1)
+#      is either a commit hash of the repo
+#      or "main" to get  the  HEAD of  the
+#      default branch.
+#
+#    + The 2nd argument ($2)
+#      is a commit hash from the NixOS/nixpkgs
+#      repo.
+#
+#         getShell "main" "832bdf74072489b8da042f9769a0a2fac9b579c7"
+#
+# 3. Using `baseline.sh`
+#
+#         source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline.sh)
+#
+#         source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline.sh) "main" "ad7b8a7e8c2da367d661df6c3742168c53913fa"
 
 # WHY THE `wrapper`?
 # ====================================================
