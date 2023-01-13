@@ -12,6 +12,22 @@
 # ====================================================
 #
 # nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline_config.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
+#
+# or (based on https://discourse.nixos.org/t/why-does-the-same-nix-expression-behave-differently-in-different-nix-shell-calls/24620)
+#
+# getShell () { \
+#    nix-shell  -v \
+#   -E "import (builtins.fetchurl \
+#       \"https://raw.githubusercontent.com/toraritte/shell.nixes/$1/baseline_config.nix\")" \
+#   --argstr "nixpkgs_commit" "$2"; \
+# }
+#
+# getShell () { nix-shell  -v -E "import (builtins.fetchurl \"https://raw.githubusercontent.com/toraritte/shell.nixes/$1/baseline_config.nix\")" --argstr "nixpkgs_commit" "$2"; }
+#
+# + The 1st argument ($1) is either a commit hash of the repo or "main" to get the HEAD of the default branch.
+# + The 2nd argument ($2) is a commit hash from the NixOS/nixpkgs repo.
+#
+# getShell "main" "832bdf74072489b8da042f9769a0a2fac9b579c7"
 
 # WHY THE `wrapper`?
 # ====================================================
@@ -368,6 +384,7 @@ let
         buildInputs =
         # Packages that work both on Linux and Mac.
         [
+          pkgs.gh
           pkgs.unixtools.netstat
           pkgs.unzip
           pkgs.zip
