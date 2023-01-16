@@ -2,11 +2,11 @@
 
 # To call this script from this repo, use
 #
-#     source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline.sh)
+#     source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/postgres/postgres.sh)
 #
 # To add arguments:
 #
-#     source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline.sh) "main" "ad7b8a7e8c2da367d661df6c3742168c53913fa"
+#     source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/postgres/postgres.sh) "main" "ad7b8a7e8c2da367d661df6c3742168c53913fa"
 
 # Refers to commit in this repo (or
 # any  other  repo  where `RAW_URL`
@@ -15,7 +15,7 @@
 # COMMIT = "main" | <git commit hash>
 # default: "main"
 
-SHELL_NIX="baseline/baseline_config.nix"
+SHELL_NIX="postgres/postgres_shell.nix"
 COMMIT=${1:-"main"}
 RAW_URL="https://raw.githubusercontent.com/toraritte/shell.nixes/${COMMIT}/${SHELL_NIX}"
 
