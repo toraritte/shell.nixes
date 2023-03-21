@@ -1,0 +1,245 @@
+syntax on
+" colorscheme wombat256mod
+set background=dark
+let g:gruvbox_contrast_dark = 'hard'
+colorscheme gruvbox
+
+set encoding=utf-8
+set noequalalways
+set foldlevelstart=99
+set foldtext=substitute(getline(v:foldstart),'/\\*\\\|\\*/\\\|{{{\\d\\=',''\'','g')
+set modeline
+set autoindent expandtab smarttab
+set shiftround
+set nocompatible
+set cursorline
+" set list
+set number
+set relativenumber
+set incsearch hlsearch
+" set showcmd
+set laststatus=2
+set backspace=indent,eol,start
+set wildmenu
+set autoread
+set history=5000
+set noswapfile
+set fillchars="vert:|,fold: "
+set showmatch
+set matchtime=2
+set hidden
+set listchars=tab:⇥\ ,trail:␣,extends:⇉,precedes:⇇,nbsp:·,eol:¬,space:␣
+set ignorecase
+set smartcase
+
+autocmd FileType erl setlocal ts=4 sw=4 sts=4 et
+
+" https://vi.stackexchange.com/questions/6/how-can-i-use-the-undofile
+if !isdirectory($HOME."/.vim")
+call mkdir($HOME."/.vim", "", 0770)
+endif
+if !isdirectory($HOME."/.vim/undo-dir")
+call mkdir($HOME."/.vim/undo-dir", "", 0700)
+endif
+set undodir=~/.vim/undo-dir
+set undofile
+
+" TODO airline-ify
+" set statusline=   " clear the statusline for when vimrc is reloaded
+" set statusline+=[%-6{fugitive#head()}]
+" set statusline+=%f\                          " file name
+" set statusline+=[%2{strlen(&ft)?&ft:'none'},  " filetype
+" set statusline+=%2{strlen(&fenc)?&fenc:&enc}, " encoding
+" set statusline+=%2{&fileformat}]              " file format
+" set statusline+=[%L\,r%l,c%c]            " [total lines,row,column]
+" set statusline+=[b%n,                      " buffer number
+" " window number, alternate file in which window (-1 = not visible)
+" set statusline+=w%{winnr()}]
+" set statusline+=%h%m%r%w                     " flags
+
+" === Scripts   {{{1
+" ===========
+
+" _$ - Strip trailing whitespace {{{2
+nnoremap _$ :call Preserve("%s/\\s\\+$//e")<CR>
+function! Preserve(command)
+" Preparation: save last search, and cursor position.
+let _s=@/
+let l = line(".")
+let c = col(".")
+" Do the business:
+execute a:command
+" Clean up: restore previous search history, and cursor position
+let @/=_s
+call cursor(l, c)
+endfunction
+
+" MakeDirsAndSaveFile (:M) {{{2
+
+" Created to be able to save a file opened with :edit where the path
+" contains directories that do not exist yet. This script will create
+" them and if they exist, `mkdir` will run without throwing an error.
+
+command! M :call MakeDirsAndSaveFile()
+" https://stackoverflow.com/questions/12625091/how-to-understand-this-vim-script
+" or
+" :h eval.txt
+" :h :fu
+function! MakeDirsAndSaveFile()
+" https://vi.stackexchange.com/questions/1942/how-to-execute-shell-commands-silently
+:silent !mkdir -p %:h
+:redraw!
+" ----------------------------------------------------------------------------------
+:write
+endfunction
+
+" === Key mappings    {{{1
+" ================
+
+" Auto-close mappings {{{2
+" https://stackoverflow.com/a/34992101/1498178
+inoremap <leader>" ""<left>
+inoremap ` ``<left>
+inoremap <leader>' ''\''<left>
+inoremap <leader>( ()<left>
+inoremap <leader>[ []<left>
+inoremap <leader>{ {}<left>
+inoremap <leader>{<CR> {<CR>}<ESC>O
+autocmd FileType nix inoremap {<CR> {<CR>};<ESC>O
+
+" 44 instead of <C-^> {{{2
+nnoremap 44 <C-^>
+" 99 instead of <C-w>w {{{2
+nnoremap 99 <C-w>w
+
+" \yy - copy entire buffer to system clipboard {{{2
+nnoremap <leader>yy :%yank +<CR>
+
+" \ys - copy entire buffer to * {{{2
+nnoremap <leader>ys :%yank *<CR>
+
+" vil - inner line {{{2
+nnoremap vil ^vg_
+
+" <Leader>l - change working dir for current window only {{{2
+nnoremap <Leader>l :lcd %:p:h<CR>:pwd<CR>
+
+" <Space> instead of 'za' (unfold the actual fold) {{{2
+nnoremap <Space> za
+
+" <Leader>J Like gJ, but always remove spaces {{{2
+fun! JoinSpaceless()
+execute 'normal gJ'
+
+" Character under cursor is whitespace?
+if matchstr(getline('.'), '\%' . col('.') . 'c.') =~ '\s'
+        " When remove it!
+        execute 'normal dw'
+endif
+endfun
+nnoremap <Leader>J :call JoinSpaceless()<CR>
+
+" in NORMAL mode CTRL-j splits line at cursor {{{2
+nnoremap <NL> i<CR><ESC>
+
+" <C-p> and <C-n> instead of <Up>,<Down> on command line {{{2
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+
+" {visual}* search {{{2
+xnoremap * :<C-u>call <SID>VSetSearch()<CR>/<C-R>=@/<CR><CR>
+xnoremap # :<C-u>call <SID>VSetSearch()<CR>?<C-R>=@/<CR><CR>
+function! s:VSetSearch()
+let temp = @s
+norm! gv"sy
+let @/ = '\V' . substitute(escape(@s, '/\'), '\n', '\\n', 'g')
+let @s = temp
+endfunction
+
+"gp - http://vim.wikia.com/wiki/Selecting_your_pasted_text
+nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
+
+" === Plugin configuration   {{{1
+" ========================
+
+" peekaboo {{{2
+let g:peekaboo_window = 'belowright 30new'
+
+" airline {{{2
+let g:airline_theme='distinguished'
+" vim-airline was overwriting vim-bufferline settings
+" but this prevents it. See bufferline settings below.
+let g:airline#extensions#bufferline#overwrite_variables = 0
+
+" fzf-vim {{{2
+nnoremap <leader><C-n> :History:<CR>
+nnoremap <leader><C-m> :History/<CR>
+nnoremap <leader><C-o> :Files<CR>
+nnoremap <leader><C-l> :Lines<CR>
+nnoremap <leader><C-r> :BLines<CR>
+nnoremap <leader><C-k> :Buffers<CR>
+nnoremap <leader><C-j> :Ag<CR>
+nnoremap <leader><C-w> :Windows<CR>
+nnoremap <leader><C-g> :Commits<CR>
+nnoremap <leader><C-p> :BCommits<CR>
+nnoremap <leader><C-h> :History<CR>
+nnoremap <leader><C-u> :Marks<CR>
+nnoremap <leader><C-i> :BD<CR>
+imap <c-x><c-l> <plug>(fzf-complete-line)
+
+" https://github.com/junegunn/fzf.vim/pull/733#issuecomment-559720813
+" (modification: added bang (!) at the end of `bwipeout`
+function! s:list_buffers()
+redir => list
+silent ls
+redir END
+return split(list, "\n")
+endfunction
+
+function! s:delete_buffers(lines)
+execute 'bwipeout!' join(map(a:lines, {_, line -> split(line)[0]}))
+endfunction
+
+command! BD call fzf#run(fzf#wrap({
+\ 'source': s:list_buffers(),
+\ 'sink*': { lines -> s:delete_buffers(lines) },
+\ 'options': '--multi --reverse --bind ctrl-a:select-all+accept'
+\ }))
+
+" bufferline {{{2
+let g:bufferline_active_buffer_left = '['
+let g:bufferline_active_buffer_right = ']'
+let g:bufferline_fname_mod = ':.'
+let g:bufferline_pathshorten = 1
+let g:bufferline_rotate = 1
+
+" UndoTree {{{2
+let g:undotree_ShortIndicators = 1
+let g:undotree_CustomUndotreeCmd = 'vertical 32 new'
+let g:undotree_CustomDiffpanelCmd= 'belowright 12 new'
+
+" Goyo {{{2
+
+let g:goyo_width = 104
+
+function! s:goyo_enter()
+Limelight0.4
+UndotreeToggle
+" ...
+endfunction
+
+function! s:goyo_leave()
+Limelight!
+UndotreeToggle
+" ...
+endfunction
+
+autocmd! User GoyoEnter nested call <SID>goyo_enter()
+autocmd! User GoyoLeave nested call <SID>goyo_leave()
+
+" FastFold {{{2
+let g:markdown_folding = 1
+
+" netrw {{{2
+let g:netrw_winsize   = 30
+let g:netrw_liststyle = 3
