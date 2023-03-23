@@ -56,7 +56,7 @@
 #
 # }}-
 { nixpkgs_commit ? import <nixpkgs> {}
-, shell_nix_repo_base_url ? ""
+, raw_github_url_to_shell_nix_dir ? ""
 }:
 
 let
@@ -111,7 +111,7 @@ let
             # when run remotely using run.sh
             else builtins.readFile
                  ( builtins.fetchurl
-                   ( shell_nix_repo_base_url + "baseline/vimrc" )
+                   ( raw_github_url_to_shell_nix_dir  + "vimrc" )
                    # returns Nix store path
                  )
                # returns a string
@@ -301,7 +301,7 @@ let
                # returns a derivation, but its `outPath`
                # attribute is called directly
           # when run remotely using run.sh
-          else builtins.fetchurl ( shell_nix_repo_base_url + "baseline/git.conf" )
+          else builtins.fetchurl ( raw_github_url_to_shell_nix_dir + "git.conf" )
                # returns a Nix path
         ;
 
@@ -312,12 +312,12 @@ let
           then builtins.readFile ./shell-hook.sh
                # returns a string
           # when run remotely using run.sh
-            else builtins.readFile
-                 ( builtins.fetchurl
-                   ( shell_nix_repo_base_url + "baseline/shell-hook.sh" )
-                   # returns Nix store path
-                 )
-               # returns a string
+          else builtins.readFile
+                ( builtins.fetchurl
+                  ( raw_github_url_to_shell_nix_dir + "shell-hook.sh" )
+                  # returns Nix store path
+                )
+                # returns a string
         ;
     };
 in

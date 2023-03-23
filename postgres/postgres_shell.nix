@@ -7,14 +7,24 @@
 # `--port` is  only needed  when used  something other
 # than the default port of 5432.
 
-# ISSUES {{-
+# TODOs {{-
 #
-# + `pga_hba.conf` in here is super-insecure; tighten it
-#   up (or, at least, add notes for best practices).
+# + `pga_hba.conf` in  here is super-insecure;
+#   tighten  it  up  (or, at  least,  make  it
+#   configurable  and/or  add notes  for  best
+#   practices).
 #
-# + QUESTION Currently,   after    running   this   Nix
-#            expression,  the  PostgreSQL superuser  is
-#            whoever the current user is.
+# + Make  it  possible   to  specify  specific
+#   PostgreSQL    version    (currently,    it
+#   depends  on  the  latest  version  in  the
+#   nixpkgs_commit)
+# }}-
+
+# QUESTIONs {{-
+#
+# + Currently,   after    running   this   Nix
+#   expression,  the  PostgreSQL superuser  is
+#   whoever the current user is.
 #   +-> Is this normal?
 #   +-> How is it set?
 #   +-> Did I influence this  with  any of the settings
@@ -22,34 +32,9 @@
 #
 # }}-
 
-# NOTE **Default `nixpkgs_commit` {{-
-#
-# The Nixpkgs commit used for pinning below is quite old,
-#
-#     Oct 1, 2021, 8:37 PM EDT
-#     https://github.com/NixOS/nixpkgs/tree/751ce748bd1ebac94442dfeaa8bc3f100d73a9f6
-#
-# but they can be overridden using `nix-shell`'s `--argstr`
-# (never figured out how to use `--arg`):
-#
-#     nix-shell \
-#       -v      \
-#       -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/_composables/postgres_shell.nix")' \
-#       --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
-#
-#  (And all that on one line:
-#  nix-shell  -v -E 'import (builtins.fetchurl "https://raw.githubusercontent.com/toraritte/shell.nixes/main/_composables/postgres_shell.nix")' --argstr "nixpkgs_commit" "3ad7b8a7e8c2da367d661df6c3742168c53913fa"
-#  )
-#
-# The rules to compose "raw" GitHub links from the regular view page seems straightforward:
-#
-#      https://github.com/               toraritte/shell.nixes/blob/main/elixir-phoenix-postgres/shell.nix
-#      https://raw.githubusercontent.com/toraritte/shell.nixes/     main/elixir-phoenix-postgres/shell.nix
-#
-# }}-
-
-# TODO Make it possible to specify specific PostgreSQL version (currently, it depends on the latest version in the nixpkgs_commit)
-{ nixpkgs_commit ? "751ce748bd1ebac94442dfeaa8bc3f100d73a9f6" }:
+{ nixpkgs_commit ? import <nixpkgs> {}
+, raw_github_url_to_shell_nix_dir ? ""
+}:
 
 let
   pkgs =
@@ -70,8 +55,20 @@ pkgs.mkShell {
     postgresql
   ];
 
-  shellHook = builtins.readFile ./shell-hook.sh;
-
+  shellHook =
+    # Check if this shell.nix is run remotely or locally
+    if ( builtins.pathExists ./shell-hook.sh )
+    # when this shell.nix is run from the repo
+    then builtins.readFile ./shell-hook.sh
+          # returns a string
+    # when run remotely using run.sh
+    else builtins.readFile
+          ( builtins.fetchurl
+            ( raw_github_url_to_shell_nix_dir + "shell-hook.sh" )
+            # returns Nix store path
+          )
+          # returns a string
+  ;
   ######################################################################
   # Without  this, almost  everything  fails with  locale issues  when #
   # using `nix-shell --pure` (at least on NixOS).                      #

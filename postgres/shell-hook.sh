@@ -149,7 +149,7 @@ HOST_COMMON="host\s\+all\s\+all"
 sed -i "s|^$HOST_COMMON.*127.*$|host all all 0.0.0.0/0 trust|" $PGDATA/pg_hba.conf
 sed -i "s|^$HOST_COMMON.*::1.*$|host all all ::/0 trust|"      $PGDATA/pg_hba.conf
 
-pg_ctl                                                  \
+pg_ctl                                                \
 -D $PGDATA                                            \
 -l $PGDATA/postgres.log                               \
 -o "-c unix_socket_directories='$PGDATA'"             \

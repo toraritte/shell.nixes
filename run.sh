@@ -124,6 +124,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+echo "NIXPKGS_COMMIT: ${NIXPKGS_COMMIT}"
+
 # If   no    option   was   specified,    default   to
 # `baseline/baseline_config.nix` in this repo
 GITHUB_REPO="${GITHUB_REPO:-"toraritte/shell.nixes"}"
@@ -133,11 +135,20 @@ SHELL_NIX_PATH="${SHELL_NIX_PATH:-"baseline/baseline_config.nix"}"
 DEFAULT_NIXPKGS_COMMIT="nixpkgs-22.11-darwin"
 NIXPKGS_COMMIT=${NIXPKGS_COMMIT:-${DEFAULT_NIXPKGS_COMMIT}}
 
+echo "DEFAULT_NIXPKGS_COMMIT: ${DEFAULT_NIXPKGS_COMMIT}"
 echo "NIXPKGS_COMMIT: ${NIXPKGS_COMMIT}"
+
+# The  rules to  compose "raw"  GitHub links  from the
+# regular view page seems straightforward:
+#
+# ```text
+# https://github.com/               toraritte/shell.nixes/blob/main/postgres/postgres_shell.nix
+# https://raw.githubusercontent.com/toraritte/shell.nixes/     main/postgres/postgres_shell.nix
+# ```
 
 RAW_GITHUB_PREFIX="https://raw.githubusercontent.com/"
 
-# `RAW_GITHUB_DIR_URL`
+# `RAW_GITHUB_URL_TO_SHELL_NIX_DIR`
 # is  the  directory   where  ancillary  files  (e.g.,
 # configuration  files)  needed  for  the  `shell.nix`
 # preside. (The presumption that  these are all in the
@@ -150,9 +161,9 @@ then
   #<= toraritte/shell.nixes
   #<= main
   #<= baseline/baseline_config.nix
-  RAW_GITHUB_DIR_URL="${RAW_GITHUB_PREFIX}${GITHUB_REPO}/${REPO_COMMIT_OR_REF}/"
+  RAW_GITHUB_URL_TO_SHELL_NIX_DIR="${RAW_GITHUB_PREFIX}${GITHUB_REPO}/${REPO_COMMIT_OR_REF}/"
   #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/
-  RAW_URL="${RAW_GITHUB_DIR_URL}${SHELL_NIX_PATH}"
+  RAW_URL="${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}${SHELL_NIX_PATH}"
   #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
 else
   #<= https://github.com/toraritte/shell.nixes/blob/main/baseline/baseline_config.nix
@@ -163,7 +174,7 @@ else
   # had to go with sed as this is not compatible with zsh on mac
   # START_INDEX=$(expr match "${GITHUB_URL}" 'https\?://github.com/')
   # GITHUB_PATH_TO_SHELL_NIX="${GITHUB_URL:${START_INDEX}}"
-  echo "START_INDEX=${START_INDEX}"
+  # echo "START_INDEX=${START_INDEX}"
   echo "GITHUB_PATH_TO_SHELL_NIX=${GITHUB_PATH_TO_SHELL_NIX}"
 
   # had to go with sed as this is not compatible with zsh on mac
@@ -175,13 +186,13 @@ else
 
   echo "GITHUB_DIR_PATH=${GITHUB_DIR_PATH}"
 
-  RAW_GITHUB_DIR_URL="${RAW_GITHUB_PREFIX}${GITHUB_DIR_PATH}"
+  RAW_GITHUB_URL_TO_SHELL_NIX_DIR="${RAW_GITHUB_PREFIX}${GITHUB_DIR_PATH}"
   #=> https://raw.githubusercontent.com/toraritte/shell.nixes/blob/main/baseline/
   RAW_URL="${RAW_GITHUB_PREFIX}${GITHUB_PATH_TO_SHELL_NIX}"
   #=> https://raw.githubusercontent.com/toraritte/shell.nixes/blob/main/baseline/baseline_config.nix
 fi
 
-echo "RAW_GITHUB_DIR_URL: ${RAW_GITHUB_DIR_URL}"
+echo "RAW_GITHUB_URL_TO_SHELL_NIX_DIR: ${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}"
 echo "RAW_URL: ${RAW_URL}"
 
 # WHY PROVIDE BOTH `nixpkgs_commit` AND `pkgs`? {{-
@@ -202,7 +213,7 @@ nix-shell                                                      \
   -v                                                           \
   -E "import (builtins.fetchurl \"${RAW_URL}\")"               \
   --argstr "nixpkgs_commit" "${NIXPKGS_COMMIT}"                \
-  --argstr "shell_nix_repo_base_url" "${RAW_GITHUB_DIR_URL}";  \
+  --argstr "raw_github_url_to_shell_nix_dir" "${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}";  \
   --arg "pkgs" "import (fetchTarball \"https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz\") {}"
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
