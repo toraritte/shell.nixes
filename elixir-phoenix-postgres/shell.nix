@@ -52,6 +52,7 @@ pkgs.mkShell {
     postgresql
     nodejs-12_x
     git
+    # TODO this will won't install on mac
     inotify-tools
   ];
 
@@ -224,7 +225,6 @@ pkgs.mkShell {
       -o "-c log_min_error_statement=info"                  \
       -o "-c log_connections=on"                            \
       start
-  '';
 
     ####################################################################
     # Install Node.js dependencies if not done yet.
