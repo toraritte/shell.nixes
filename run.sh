@@ -97,48 +97,27 @@
 #   }}-
 # }}-
 
+# LESSONS LEARNED
+#
+# 1. **Forget bash/shell functions.**
+#
+#    They  may make  the script  more readable,
+#    but  mess  up   everything  else  and  are
+#    undebugable.
+
 RAW_GITHUB_PREFIX="https://raw.githubusercontent.com/"
+
+# This may be unnecessary, but ran into so many issues
+# with rogue variables  that I'm leaving it  here as a
+# charm at this point.
 unset RAW_GITHUB_URL
-
-# --- HELPERS --- {{-
-
-# GITHUB_URL     := "https://github.com               /<user_or_org>/<repo>/blob/<git_ref>/<path_to_shell_nix>"
-# RAW_GITHUB_URL := "https://raw.githubusercontent.com/<user_or_org>/<repo>/     <git_ref>/<path_to_shell_nix>"
-# f :: GITHUB_URL -> RAW_GITHUB_URL
-function raw_from_github_url() { # {{-
-
-  # NOTE Why use `sed` in the `if` block  and  not shell string manipulation commands? {{-
-  # Using `sed` to manipulate strings instead of
-  # [Bash's built-in methods](https://tldp.org/LDP/abs/html/string-manipulation.html)
-  # because they are not portable. (At least, I couldn't
-  # figure out  which ones are, and  running simple Bash
-  # string commands failed on macOS  as it uses ZSH, and
-  # the default Bash shell is way outdated, running Bash
-  # 3.x that also don't support these commands. `sed` on
-  # the  other hand  is almost  always present,  and I'm
-  # calling  it with  `nix-shell`, making  sure this  is
-  # true.)
-  # }}-
-
-  #<= https://github.com/<user_or_org>/<repo>/blob/<git_ref>/<path_to_shell_nix>
-  #<= e.g., https://github.com/toraritte/shell.nixes/blob/main/baseline/baseline_config.nix
-  TO_RAW_GITHUB_PATH=$(nix-shell --pure -p gnused --run "echo $1 | sed 's/https\?:\/\/github.com\///g' | sed 's/blob\///g'")
-  #=> <user_or_org>/<repo>/<git_ref>/<path_to_shell_nix>
-  #=> e.g., toraritte/shell.nixes/main/baseline/baseline_config.nix
-
-  return "${RAW_GITHUB_PREFIX}${TO_RAW_GITHUB_PATH}"
-  #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
-}
-# }}-
-
-# }}-
 
 # https://unix.stackexchange.com/questions/129391/passing-named-arguments-to-shell-scripts
 while [ $# -gt 0 ]; do
   case "$1" in
 
     --github-url-to-shell-nix|-g)
-      RAW_GITHUB_URL=$(raw_from_github_url "$2")
+      GITHUB_URL=$2
       ;;
     --github-repo|-r)
       GITHUB_REPO="$2"
@@ -174,13 +153,35 @@ NIXPKGS_COMMIT=${NIXPKGS_COMMIT:-${DEFAULT_NIXPKGS_COMMIT}}
 
 echo "NIXPKGS_COMMIT: ${NIXPKGS_COMMIT}"
 
-if [ -z "${RAW_GITHUB_URL}" ] # i.e., TRUE if `run.sh` was NOT invoked with `-g`
+  # NOTE Why use `sed` in the `if` block  and  not shell string manipulation commands? {{-
+  # Using `sed` to manipulate strings instead of
+  # [Bash's built-in methods](https://tldp.org/LDP/abs/html/string-manipulation.html)
+  # because they are not portable. (At least, I couldn't
+  # figure out  which ones are, and  running simple Bash
+  # string commands failed on macOS  as it uses ZSH, and
+  # the default Bash shell is way outdated, running Bash
+  # 3.x that also don't support these commands. `sed` on
+  # the  other hand  is almost  always present,  and I'm
+  # calling  it with  `nix-shell`, making  sure this  is
+  # true.)
+  # }}-
+
+if [ -z "${GITHUB_URL}" ] # i.e., TRUE if `run.sh` was NOT invoked with `-g`
 then
   #<= GITHUB_REPO        (e.g., toraritte/shell.nixes)
   #<= REPO_COMMIT_OR_REF (e.g., main)
   #<= SHELL_NIX_PATH     (e.g., baseline/baseline_config.nix)
   RAW_GITHUB_URL="${RAW_GITHUB_PREFIX}${GITHUB_REPO}/${REPO_COMMIT_OR_REF}/${SHELL_NIX_PATH}"
   #=> e.g., https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
+else
+  #<= https://github.com/<user_or_org>/<repo>/blob/<git_ref>/<path_to_shell_nix>
+  #<= e.g., https://github.com/toraritte/shell.nixes/blob/main/baseline/baseline_config.nix
+  TO_RAW_GITHUB_PATH=$(nix-shell --pure -p gnused --run "echo ${GITHUB_URL} | sed 's/https\?:\/\/github.com\///g' | sed 's/blob\///g'")
+  #=> <user_or_org>/<repo>/<git_ref>/<path_to_shell_nix>
+  #=> e.g., toraritte/shell.nixes/main/baseline/baseline_config.nix
+
+  RAW_GITHUB_URL="${RAW_GITHUB_PREFIX}${TO_RAW_GITHUB_PATH}"
+  #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
 fi
 
 # NOTE `RAW_GITHUB_URL_TO_SHELL_NIX_DIR` {{-
