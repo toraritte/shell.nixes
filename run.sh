@@ -97,31 +97,16 @@
 #   }}-
 # }}-
 
+RAW_GITHUB_PREFIX="https://raw.githubusercontent.com/"
+unset RAW_GITHUB_URL
+
 # --- HELPERS --- {{-
 
-# f :: GITHUB_REPO -> REPO_COMMIT_OR_REF -> SHELL_NIX_PATH
-#      -> RAW_URL, RAW_GITHUB_URL_TO_SHELL_NIX_DIR
-#
-# f :: GITHUB_URL -> RAW_URL, RAW_GITHUB_URL_TO_SHELL_NIX_DIR
-function get_raw_github_urls() {
+# GITHUB_URL     := "https://github.com               /<user_or_org>/<repo>/blob/<git_ref>/<path_to_shell_nix>"
+# RAW_GITHUB_URL := "https://raw.githubusercontent.com/<user_or_org>/<repo>/     <git_ref>/<path_to_shell_nix>"
+# f :: GITHUB_URL -> RAW_GITHUB_URL
+function raw_from_github_url() { # {{-
 
-  # The  rules to  compose "raw"  GitHub links  from the
-  # regular view page seems straightforward:
-  #
-  # ```text
-  # https://github.com/               toraritte/shell.nixes/blob/main/postgres/postgres_shell.nix
-  # https://raw.githubusercontent.com/toraritte/shell.nixes/     main/postgres/postgres_shell.nix
-  # ```
-
-  RAW_GITHUB_PREFIX="https://raw.githubusercontent.com/"
-
-  # NOTE `RAW_GITHUB_URL_TO_SHELL_NIX_DIR` {{-
-  # is  the  directory   where  ancillary  files  (e.g.,
-  # configuration  files)  needed  for  the  `shell.nix`
-  # preside. (The presumption that  these are all in the
-  # same  directory  is  hard-coded for  now.)  See  the
-  # `baseline/` directory for example.
-  # }}-
   # NOTE Why use `sed` in the `if` block  and  not shell string manipulation commands? {{-
   # Using `sed` to manipulate strings instead of
   # [Bash's built-in methods](https://tldp.org/LDP/abs/html/string-manipulation.html)
@@ -135,29 +120,17 @@ function get_raw_github_urls() {
   # true.)
   # }}-
 
-  if [ -z "${GITHUB_URL}" ] # i.e., TRUE if `run.sh` is NOT invoked with `-g`
-  then
-    #<= toraritte/shell.nixes
-    #<= main
-    #<= baseline/baseline_config.nix
-    RAW_URL="${RAW_GITHUB_PREFIX}${GITHUB_REPO}/${REPO_COMMIT_OR_REF}/${SHELL_NIX_PATH}"
-    #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
-  else
-    #<= https://github.com/toraritte/shell.nixes/blob/main/baseline/baseline_config.nix
-    TO_RAW_GITHUB_PATH=$(nix-shell -p gnused --run "echo $GITHUB_URL | sed 's/https\?:\/\/github.com\///g' | sed 's/blob\///g'")
-    #=> toraritte/shell.nixes/main/baseline/baseline_config.nix
+  #<= https://github.com/<user_or_org>/<repo>/blob/<git_ref>/<path_to_shell_nix>
+  #<= e.g., https://github.com/toraritte/shell.nixes/blob/main/baseline/baseline_config.nix
+  TO_RAW_GITHUB_PATH=$(nix-shell --pure -p gnused --run "echo $1 | sed 's/https\?:\/\/github.com\///g' | sed 's/blob\///g'")
+  #=> <user_or_org>/<repo>/<git_ref>/<path_to_shell_nix>
+  #=> e.g., toraritte/shell.nixes/main/baseline/baseline_config.nix
 
-    RAW_URL="${RAW_GITHUB_PREFIX}${TO_RAW_GITHUB_PATH}"
-    #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
-  fi
-
-  #<= https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
-  RAW_GITHUB_URL_TO_SHELL_NIX_DIR=$(nix-shell -p gnused --run "echo $RAW_URL | sed 's/\(.*\/\).*$/\1/g'")
-  #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/
-
-  echo "RAW_URL: ${RAW_URL}"
-  echo "RAW_GITHUB_URL_TO_SHELL_NIX_DIR: ${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}"
+  return "${RAW_GITHUB_PREFIX}${TO_RAW_GITHUB_PATH}"
+  #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
 }
+# }}-
+
 # }}-
 
 # https://unix.stackexchange.com/questions/129391/passing-named-arguments-to-shell-scripts
@@ -165,7 +138,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
 
     --github-url-to-shell-nix|-g)
-      GITHUB_URL="$2"
+      RAW_GITHUB_URL=$(raw_from_github_url "$2")
       ;;
     --github-repo|-r)
       GITHUB_REPO="$2"
@@ -201,7 +174,29 @@ NIXPKGS_COMMIT=${NIXPKGS_COMMIT:-${DEFAULT_NIXPKGS_COMMIT}}
 
 echo "NIXPKGS_COMMIT: ${NIXPKGS_COMMIT}"
 
-get_raw_github_urls
+if [ -z "${RAW_GITHUB_URL}" ] # i.e., TRUE if `run.sh` was NOT invoked with `-g`
+then
+  #<= GITHUB_REPO        (e.g., toraritte/shell.nixes)
+  #<= REPO_COMMIT_OR_REF (e.g., main)
+  #<= SHELL_NIX_PATH     (e.g., baseline/baseline_config.nix)
+  RAW_GITHUB_URL="${RAW_GITHUB_PREFIX}${GITHUB_REPO}/${REPO_COMMIT_OR_REF}/${SHELL_NIX_PATH}"
+  #=> e.g., https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
+fi
+
+# NOTE `RAW_GITHUB_URL_TO_SHELL_NIX_DIR` {{-
+# is  the  directory   where  ancillary  files  (e.g.,
+# configuration  files)  needed  for  the  `shell.nix`
+# preside. (The presumption that  these are all in the
+# same  directory  is  hard-coded for  now.)  See  the
+# `baseline/` directory for example.
+# }}-
+
+#=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/baseline_config.nix
+RAW_GITHUB_URL_TO_SHELL_NIX_DIR=$(nix-shell --pure -p gnused --run "echo $RAW_GITHUB_URL | sed 's/\(.*\/\).*$/\1/g'")
+#=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/
+
+echo "RAW_GITHUB_URL: ${RAW_GITHUB_URL}"
+echo "RAW_GITHUB_URL_TO_SHELL_NIX_DIR: ${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}"
 
 # WHY PROVIDE BOTH `nixpkgs_commit` AND `pkgs`? {{-
 # ====================================================
@@ -215,11 +210,11 @@ get_raw_github_urls
 # `shell.nix` (for  now). Anyway,  it is good  to know
 # how to do it both ways.
 # }}-
-nix-shell                                                      \
-  --show-trace                                                 \
-  -v                                                           \
-  -E "import (builtins.fetchurl \"${RAW_URL}\")"               \
-  --argstr "nixpkgs_commit" "${NIXPKGS_COMMIT}"                \
+nix-shell                                               \
+  --show-trace                                          \
+  -v                                                    \
+  -E "import (builtins.fetchurl \"${RAW_GITHUB_URL}\")" \
+  --argstr "nixpkgs_commit" "${NIXPKGS_COMMIT}"         \
   --argstr "raw_github_url_to_shell_nix_dir" "${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}";  \
   --arg "pkgs" "import (fetchTarball \"https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz\") {}"
 
@@ -249,7 +244,7 @@ unset REPO_COMMIT_OR_REF
 unset SHELL_NIX_PATH
 unset DEFAULT_NIXPKGS_COMMIT
 unset NIXPKGS_COMMIT
-unset RAW_URL
+unset RAW_GITHUB_URL
 unset RAW_GITHUB_URL_TO_SHELL_NIX_DIR
 unset GITHUB_URL
 # " \
