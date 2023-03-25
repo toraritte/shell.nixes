@@ -32,7 +32,7 @@
 #
 # }}-
 
-{ nixpkgs_commit ? import <nixpkgs> {}
+{ nixpkgs_commit # See head of `baseline_config.nix` if also want to pass pkg sets.
 , raw_github_url_to_shell_nix_dir ? ""
 }:
 
@@ -47,7 +47,6 @@ let
       { config = {}; overlays = []; }
   ;
 in
-
 
 pkgs.mkShell {
 
