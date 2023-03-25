@@ -19,7 +19,8 @@ export PGDATA=$NIX_SHELL_DIR/db
 # Clean up after exiting the Nix shell using `trap`.                 #
 # ------------------------------------------------------------------ #
 # Idea taken from                                                    #
-# https://unix.stackexchange.com/questions/464106/killing-background-processes-started-in-nix-shell
+#   Killing background processes started in nix-shell                #
+#   https://unix.stackexchange.com/questions/464106/                 #
 # and the answer provides a way more sophisticated solution.         #
 #                                                                    #
 # The main syntax is `trap ARG SIGNAL` where ARG are the commands to #
@@ -56,25 +57,31 @@ EXIT
 if ! test -d $PGDATA
 then
 
-########################################################
-# Init PostgreSQL                                      #
-#                                                      #
-# NOTE `initdb` vs `createdb`                          #
-# https://stackoverflow.com/questions/50210158/whats-the-difference-between-initdb-usr-local-var-db-and-createdb-db
-# https://www.postgresql.org/docs/current/app-initdb.html
-########################################################
+#############################################################
+# Init PostgreSQL                                           #
+#                                                           #
+# NOTE `initdb` vs `createdb`                               #
+#                                                           #
+# + What's the difference between initdb and createdb       #
+#   https://stackoverflow.com/questions/50210158/           #
+#                                                           #
+# + https://www.postgresql.org/docs/current/app-initdb.html #
+#                                                           #
+#############################################################
 
 pg_ctl initdb -D  $PGDATA
 
-########################################################
-# PORT ALREADY IN USE                                  #
-########################################################
-# If another `nix-shell` is  running with a PostgreSQL #
-# instance,  the logs  will show  complaints that  the #
-# default port 5432  is already in use.  Edit the line #
-# below with  a different  port number,  uncomment it, #
-# and try again.                                       #
-########################################################
+#############################################################
+# PORT ALREADY IN USE                                       #
+#############################################################
+#                                                           #
+# If another `nix-shell` is  running with a PostgreSQL      #
+# instance,  the logs  will show  complaints that  the      #
+# default port 5432  is already in use.  Edit the line      #
+# below with  a different  port number,  uncomment it,      #
+# and try again.                                            #
+#                                                           #
+#############################################################
 
 # sed -i "s|^#port.*$|port = 5433|" $PGDATA/postgresql.conf
 
@@ -83,6 +90,7 @@ fi
 ########################################################################
 # Configure and start PostgreSQL                                       #
 # ==================================================================== #
+#                                                                      #
 # Setting all  necessary configuration  options via  `pg_ctl` (which   #
 # is  basically  a wrapper  around  `postgres`)  instead of  editing   #
 # `postgresql.conf` directly with `sed`. See docs:                     #
@@ -127,11 +135,17 @@ fi
 #     PosgreSQL connections (these are  all mirrors of the             #
 #     same text; again, paranoia):                                     #
 #                                                                      #
-#       + https://stackoverflow.com/questions/24504680/connect-to-postgres-server-on-google-compute-engine
-#       + https://stackoverflow.com/questions/47794979/connecting-to-postgres-server-on-google-compute-engine
-#       + https://medium.com/scientific-breakthrough-of-the-afternoon/configure-postgresql-to-allow-remote-connections-af5a1a392a38
-#       + https://gist.github.com/toraritte/f8c7fe001365c50294adfe8509080201#file-configure-postgres-to-allow-remote-connection-md
-#
+#       * connect to postgres server on google compute engine          #
+#         https://stackoverflow.com/questions/24504680/                #
+#                                                                      #
+#       * How to connect to remote PostgreSQL server on google         #
+#         compute engine?                                              #
+#         https://stackoverflow.com/questions/47794979/                #
+#                                                                      #
+#       * https://medium.com/scientific-breakthrough-of-the-afternoon/configure-postgresql-to-allow-remote-connections-af5a1a392a38
+#                                                                      #
+#       * https://gist.github.com/toraritte/f8c7fe001365c50294adfe8509080201#file-configure-postgres-to-allow-remote-connection-md
+#                                                                      #
 #   + `log*`                                                           #
 #                                                                      #
 #     Setting up basic logging,  to see remote connections             #
