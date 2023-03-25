@@ -62,10 +62,10 @@ pkgs.mkShell {
           # returns a string
     # when run remotely using run.sh
     else builtins.readFile
-          ( builtins.fetchurl
-            ( raw_github_url_to_shell_nix_dir + "shell-hook.sh" )
+         ( builtins.fetchurl
+           ( raw_github_url_to_shell_nix_dir + "shell-hook.sh" )
             # returns Nix store path
-          )
+         )
           # returns a string
   ;
   ######################################################################
@@ -76,7 +76,11 @@ pkgs.mkShell {
   # + http://lists.linuxfromscratch.org/pipermail/lfs-support/2004-June#023900.html
   ######################################################################
 
-  LOCALE_ARCHIVE = if pkgs.stdenv.isLinux then "${pkgs.glibcLocales}/lib/locale/locale-archive" else "";
+  LOCALE_ARCHIVE =
+    if pkgs.stdenv.isLinux
+    then "${pkgs.glibcLocales}/lib/locale/locale-archive"
+    else ""
+  ;
 }
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
