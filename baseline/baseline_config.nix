@@ -293,7 +293,6 @@ let
 
         # }}-
 
-
         # https://discourse.nixos.org/t/is-it-possible-to-change-the-default-git-user-config-for-a-devshell/17612
         GIT_CONFIG_GLOBAL =
           # Check if this shell.nix is run remotely or locally

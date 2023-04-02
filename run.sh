@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# LESSONS LEARNED
+#
+# 1. **Forget bash/shell functions.**
+#
+#    They  may make  the script  more readable,
+#    but  mess  up   everything  else  and  are
+#    undebugable.
+
 # --- MAN(ISH) PAGE --- {{-
 
 # ABSTRACT
@@ -23,6 +31,7 @@
 #   =====================
 #
 #   --nixpkgs-commit          | -n <git-commit-hash-or-reference-in-the-nixpkgs-repo>
+#   --pass-opts-to-nix-shell  | -o <nix-shell_options>
 # ```
 #
 #      > WARNING
@@ -66,6 +75,14 @@
 #   hash, tag, branch name, etc in the [NixOS/nixpkgs](
 #   https://github.com/NixOS/nixpkgs
 #   ) repo.
+#
+# + <nix-shell_options>
+#
+#   See
+#   [`nix-shell` man page](https://nixos.org/manual/nix/stable/command-ref/nix-shell.html)
+#   , but beware that it is not the full list (see
+#   [`NixOS/nix` issue #8093](https://github.com/NixOS/nix/issues/8093)
+#   ).
 # }}-
 
 # EXAMPLES {{-
@@ -84,6 +101,8 @@
 # source run.sh -n "staging" -r "toraritte/shell.nixes" -c "main" -p "postgres/postgres_shell.nix"
 #
 # source run.sh -n "832bdf74072489b8da042f9769a0a2fac9b579c7" -r "toraritte/shell.nixes" -c "ebc9079" -p "baseline/baseline_config.nix"
+
+# source run.sh -o "-v --show-trace"
 # ```
 #
 # If want to call `run.sh` remotely, just replace it with:
@@ -96,21 +115,6 @@
 # ```
 #   }}-
 # }}-
-
-# LESSONS LEARNED
-#
-# 1. **Forget bash/shell functions.**
-#
-#    They  may make  the script  more readable,
-#    but  mess  up   everything  else  and  are
-#    undebugable.
-
-RAW_GITHUB_PREFIX="https://raw.githubusercontent.com/"
-
-# This may be unnecessary, but ran into so many issues
-# with rogue variables  that I'm leaving it  here as a
-# charm at this point.
-unset RAW_GITHUB_URL
 
 # https://unix.stackexchange.com/questions/129391/passing-named-arguments-to-shell-scripts
 while [ $# -gt 0 ]; do
@@ -131,6 +135,9 @@ while [ $# -gt 0 ]; do
     --nixpkgs-commit|-n)
       NIXPKGS_COMMIT="$2"
       ;;
+    --pass-opts-to-nix-shell|-o)
+      EXTRA_NIX_SHELL_OPTIONS="$2"
+      ;;
     *)
       printf "***************************\n"
       printf "* Error: Invalid argument.*\n"
@@ -141,7 +148,23 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# --- DEFAULT VALUES ---
+echo
+echo "---INIT-ALL-USED-SHELL-VARS-&-DEFAULT-VALUES---" # {{-
+echo "-----------------------------------------------"
+
+RAW_GITHUB_PREFIX="https://raw.githubusercontent.com/"
+
+# This may be unnecessary, but ran into so many issues
+# with rogue variables  that I'm leaving it  here as a
+# charm at this point.
+unset RAW_GITHUB_URL
+
+# Making  sure  that  shell  variables  not  set  with
+# command line  options in the `while`  loop above are
+# indeed "empty".
+GITHUB_URL="${GITHUB_URL:-""}"
+EXTRA_NIX_SHELL_OPTIONS="${EXTRA_NIX_SHELL_OPTIONS:-""}"
+
 # If   no    option   was   specified,    default   to
 # `baseline/baseline_config.nix` in this repo
 GITHUB_REPO="${GITHUB_REPO:-"toraritte/shell.nixes"}"
@@ -152,20 +175,21 @@ DEFAULT_NIXPKGS_COMMIT="nixpkgs-22.11-darwin"
 NIXPKGS_COMMIT=${NIXPKGS_COMMIT:-${DEFAULT_NIXPKGS_COMMIT}}
 
 echo "NIXPKGS_COMMIT: ${NIXPKGS_COMMIT}"
+echo "-----------------------------------------------"
+# }}-
 
-  # NOTE Why use `sed` in the `if` block  and  not shell string manipulation commands? {{-
-  # Using `sed` to manipulate strings instead of
-  # [Bash's built-in methods](https://tldp.org/LDP/abs/html/string-manipulation.html)
-  # because they are not portable. (At least, I couldn't
-  # figure out  which ones are, and  running simple Bash
-  # string commands failed on macOS  as it uses ZSH, and
-  # the default Bash shell is way outdated, running Bash
-  # 3.x that also don't support these commands. `sed` on
-  # the  other hand  is almost  always present,  and I'm
-  # calling  it with  `nix-shell`, making  sure this  is
-  # true.)
-  # }}-
-
+# NOTE Why use `sed` in the `if` block  and  not shell string manipulation commands? {{-
+# Using `sed` to manipulate strings instead of
+# [Bash's built-in methods](https://tldp.org/LDP/abs/html/string-manipulation.html)
+# because they are not portable. (At least, I couldn't
+# figure out  which ones are, and  running simple Bash
+# string commands failed on macOS  as it uses ZSH, and
+# the default Bash shell is way outdated, running Bash
+# 3.x that also don't support these commands. `sed` on
+# the  other hand  is almost  always present,  and I'm
+# calling  it with  `nix-shell`, making  sure this  is
+# true.)
+# }}-
 if [ -z "${GITHUB_URL}" ] # i.e., TRUE if `run.sh` was NOT invoked with `-g`
 then
   #<= GITHUB_REPO        (e.g., toraritte/shell.nixes)
@@ -196,7 +220,7 @@ fi
 RAW_GITHUB_URL_TO_SHELL_NIX_DIR=$(nix-shell --pure -p gnused --run "echo $RAW_GITHUB_URL | sed 's/\(.*\/\).*$/\1/g'")
 #=> https://raw.githubusercontent.com/toraritte/shell.nixes/main/baseline/
 
-echo "RAW_GITHUB_URL: ${RAW_GITHUB_URL}"
+echo "                 RAW_GITHUB_URL: ${RAW_GITHUB_URL}"
 echo "RAW_GITHUB_URL_TO_SHELL_NIX_DIR: ${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}"
 
 # WHY PROVIDE BOTH `nixpkgs_commit` AND `pkgs`? {{-
@@ -211,15 +235,38 @@ echo "RAW_GITHUB_URL_TO_SHELL_NIX_DIR: ${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}"
 # `shell.nix` (for  now). Anyway,  it is good  to know
 # how to do it both ways.
 # }}-
-nix-shell                                               \
-  --show-trace                                          \
-  -v                                                    \
-  -E "import (builtins.fetchurl \"${RAW_GITHUB_URL}\")" \
-  --argstr "nixpkgs_commit" "${NIXPKGS_COMMIT}"         \
-  --argstr "raw_github_url_to_shell_nix_dir" "${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}";  \
-  --arg "pkgs" "import (fetchTarball \"https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz\") {}"
 
-# NOTE clean up after script has run {{-
+        OPT_FETCH_URL="-E 'import (builtins.fetchurl \"${RAW_GITHUB_URL}\")'"
+   OPT_ARGSTR_NIXPKGS="--argstr \"nixpkgs_commit\" \"${NIXPKGS_COMMIT}\""
+OPT_ARGSTR_GITHUB_DIR="--argstr \"raw_github_url_to_shell_nix_dir\" \"${RAW_GITHUB_URL_TO_SHELL_NIX_DIR}\""
+         OPT_ARG_PKGS="--arg \"pkgs\" 'import (fetchTarball \"https://github.com/NixOS/nixpkgs/archive/${NIXPKGS_COMMIT}.tar.gz\") {}'"
+
+echo
+echo "---COMMAND-TO-EXECUTE---"
+echo "nix-shell"
+echo ${OPT_FETCH_URL}
+echo ${OPT_ARGSTR_NIXPKGS}
+echo ${OPT_ARGSTR_GITHUB_DIR}
+echo ${OPT_ARG_PKGS}
+echo ${EXTRA_NIX_SHELL_OPTIONS}
+echo
+
+NIX_SHELL_COMMAND="        \
+  nix-shell                \
+  ${OPT_FETCH_URL}         \
+  ${OPT_ARGSTR_NIXPKGS}    \
+  ${OPT_ARGSTR_GITHUB_DIR} \
+  ${OPT_ARG_PKGS}          \
+  ${EXTRA_NIX_SHELL_OPTIONS}"
+
+echo ${NIX_SHELL_COMMAND}
+echo "------------------------"
+
+eval $NIX_SHELL_COMMAND
+
+echo "---CLEAN-UP-AFTER-SCRIPT-HAS-RUN---" # {{-
+
+# NOTES {{-
 # https://www.linuxjournal.com/content/bash-trap-command
 # https://unix.stackexchange.com/questions/464106/killing-background-processes-started-in-nix-shell
 # https://unix.stackexchange.com/questions/360375/is-it-a-good-practice-to-delete-all-variables-at-the-end-of-a-script
@@ -236,6 +283,7 @@ nix-shell                                               \
 # when the sub-shell is  terminated (e.g., with ^D) so
 # it can catch it.)
 # }}-
+
 # trap \
 # "
 echo 'cleaning up...'
@@ -248,7 +296,15 @@ unset NIXPKGS_COMMIT
 unset RAW_GITHUB_URL
 unset RAW_GITHUB_URL_TO_SHELL_NIX_DIR
 unset GITHUB_URL
+unset OPT_FETCH_URL
+unset OPT_ARGSTR_NIXPKGS
+unset OPT_ARGSTR_GITHUB_DIR
+unset OPT_ARG_PKGS
+unset EXTRA_NIX_SHELL_OPTIONS
+unset NIX_SHELL_COMMAND
 # " \
 # RETURN
+
+# }}-
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
