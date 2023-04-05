@@ -101,23 +101,22 @@ let
         else maybeNixpkgsCommit
       ;
 
+      _utils_file =
+        builtins.fetchurl
+          "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+      ;
+      # short for shell.nixes_utils
+      snutils =
+        (import _utils_file)
+          { remote_prefix = raw_github_url_to_shell_nix_dir;
+            working_dir = ./.;
+          }
+      ;
+
       myVim = # {{-
         pkgs.vim_configurable.customize {
 
-          vimrcConfig.customRC =
-            # Check if this shell.nix is run remotely or locally
-            if ( builtins.pathExists ./vimrc )
-            # when this shell.nix is run from the repo
-            then builtins.readFile ./vimrc
-                 # returns a string
-            # when run remotely using run.sh
-            else builtins.readFile
-                 ( builtins.fetchurl
-                   ( raw_github_url_to_shell_nix_dir  + "vimrc" )
-                   # returns Nix store path
-                 )
-               # returns a string
-        ;
+          vimrcConfig.customRC = snutils.f "vimrc";
 
           vimrcConfig.packages.myVimPackage =
             with pkgs.vimPlugins; {
@@ -306,20 +305,7 @@ let
                # returns a Nix path
         ;
 
-        shellHook =
-          # Check if this shell.nix is run remotely or locally
-          if ( builtins.pathExists ./shell-hook.sh )
-          # when this shell.nix is run from the repo
-          then builtins.readFile ./shell-hook.sh
-               # returns a string
-          # when run remotely using run.sh
-          else builtins.readFile
-                ( builtins.fetchurl
-                  ( raw_github_url_to_shell_nix_dir + "shell-hook.sh" )
-                  # returns Nix store path
-                )
-                # returns a string
-        ;
+        shellHook = snutils.f "shell-hook.sh";
     };
 in
   wrapper_function { maybeNixpkgsCommit = nixpkgs_commit; }

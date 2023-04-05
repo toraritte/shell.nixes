@@ -3,6 +3,10 @@ TODO: This repo is huge mess...
 + `_helpers`: Some good notes in `README`s, but it was so long ago that not even sure what I was trying to achieve.
 + `_utils`: Helper functions for composing `shellHook`s; see `shell.nix` files in [`./postgres`](./postgres) and [`.baseline`](./baseline) directories. (I think this was to goal of `_helpers`, but I had even less clue of what I was doing than now.)
 
+NOTES:
+
++ `builtins.fetchurl` will cache results (see issue https://github.com/NixOS/nix/issues/1223), and so far the only solution for me is to keep track of fetched files and to delete them with `nix-store --delete <nix-store-path>`
+
 ---
 
 Each folder has their specific README, but the source files are heavily commented as well, in case it is missing. If you still have any questions, or have suggestions, please feel free to open an issue, PR, or track me down any other way.
