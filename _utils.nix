@@ -32,7 +32,7 @@ let
       path = ./. + "/${filename}";
     in
       # Check if this shell.nix is run remotely or locally
-      if ( builtins.pathExists path )
+      if ( builtins.pathExists ( trace path path ) )
       # when this shell.nix is run from the repo
       then builtins.readFile path #=> String
       # when run remotely using run.sh
