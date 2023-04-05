@@ -1,4 +1,4 @@
-{ remote_prefix ? "" }:
+{ remote_prefix,  pwd }:
 
 let
 
@@ -23,27 +23,27 @@ let
   #      remote URL is needed.
 
   fetchFile =
-    remote_prefix: filename:
+    { pwd, remote_prefix }@p: filename:
     let
       # The journey to figure out how to get the current dir:
       # + https://discourse.nixos.org/t/how-to-refer-to-current-directory-in-shell-nix/9526
       # + https://stackoverflow.com/questions/43850371/when-does-a-nix-path-type-make-it-into-the-nix-store-and-when-not
       # + https://gist.github.com/CMCDragonkai/de84aece83f8521d087416fa21e34df4
-      path = ./. + "/${filename}";
+      path = p.pwd + "/${filename}";
     in
       # Check if this shell.nix is run remotely or locally
-      if ( builtins.pathExists ( trace path path ) )
+      if ( builtins.pathExists path )
       # when this shell.nix is run from the repo
       then builtins.readFile path #=> String
       # when run remotely using run.sh
       else builtins.readFile
           ( builtins.fetchurl
-            ( remote_prefix + filename) #=> Nix store path (usually `/nix/store/...`)
+            ( p.remote_prefix + filename) #=> Nix store path (usually `/nix/store/...`)
           )
           #=> String
   ;
 
-  f = fetchFile remote_prefix;
+  f = fetchFile { inherit remote_prefix pwd; };
 
   # a.k.a., trapWrap
   # cleanUp :: List ShellScriptName -> TrapWrappedString
@@ -80,7 +80,7 @@ let
       ''
   ;
 
-  c = cleanUp remote_prefix;
+  c = cleanUp { inherit remote_prefix pwd; };
 
 in
 
