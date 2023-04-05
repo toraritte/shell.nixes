@@ -37,50 +37,59 @@
 }:
 
 let
+
+  # The downloaded archive will be (temporarily?) housed in the Nix store
+  # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
+  # (Try any of the `fetchTarball` commands  below  in `nix repl`, and it
+  #  will print out the path.)
+  nixpkgs_tarball =
+    builtins.fetchTarball
+      "https://github.com/nixos/nixpkgs/tarball/${nixpkgs_commit}"
+  ;
   pkgs =
-    import
-      # The downloaded archive will be (temporarily?) housed in the Nix store
-      # e.g., "/nix/store/gk9x7syd0ic6hjrf0fs6y4bsd16zgscg-source"
-      # (Try any of the `fetchTarball` commands  below  in `nix repl`, and it
-      #  will print out the path.)
-      ( builtins.fetchTarball "https://github.com/nixos/nixpkgs/tarball/${nixpkgs_commit}" )
+    (import nixpkgs_tarball)
       { config = {}; overlays = []; }
   ;
+
+  _utils_file =
+    builtins.fetchurl
+      "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+  ;
+  # short for shell.nixes_utils
+  snutils =
+    (import _utils_file)
+      { remote_prefix = raw_github_url_to_shell_nix_dir;
+        working_dir = ./.;
+      }
+  ;
+
 in
 
-pkgs.mkShell {
+  pkgs.mkShell {
 
-  buildInputs = with pkgs; [
-    postgresql
-  ];
+    buildInputs = with pkgs; [
+      postgresql
+    ];
 
-  shellHook =
-    # Check if this shell.nix is run remotely or locally
-    if ( builtins.pathExists ./shell-hook.sh )
-    # when this shell.nix is run from the repo
-    then builtins.readFile ./shell-hook.sh
-          # returns a string
-    # when run remotely using run.sh
-    else builtins.readFile
-         ( builtins.fetchurl
-           ( raw_github_url_to_shell_nix_dir + "shell-hook.sh" )
-            # returns Nix store path
-         )
-          # returns a string
-  ;
-  ######################################################################
-  # Without  this, almost  everything  fails with  locale issues  when #
-  # using `nix-shell --pure` (at least on NixOS).                      #
-  # See                                                                #
-  # + https://github.com/NixOS/nix/issues/318#issuecomment-52986702    #
-  # + http://lists.linuxfromscratch.org/pipermail/lfs-support/2004-June#023900.html
-  ######################################################################
+    shellHook =
+        snutils.f "shell-hook.sh"
+      + snutils.c ["clean-up.sh"]
+      #+ c ["../t" "clean-up.sh" "../t"]
+    ;
 
-  LOCALE_ARCHIVE =
-    if pkgs.stdenv.isLinux
-    then "${pkgs.glibcLocales}/lib/locale/locale-archive"
-    else ""
-  ;
-}
+    ######################################################################
+    # Without  this, almost  everything  fails with  locale issues  when #
+    # using `nix-shell --pure` (at least on NixOS).                      #
+    # See                                                                #
+    # + https://github.com/NixOS/nix/issues/318#issuecomment-52986702    #
+    # + http://lists.linuxfromscratch.org/pipermail/lfs-support/2004-June#023900.html
+    ######################################################################
+
+    LOCALE_ARCHIVE =
+      if pkgs.stdenv.isLinux
+      then "${pkgs.glibcLocales}/lib/locale/locale-archive"
+      else ""
+    ;
+  }
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:

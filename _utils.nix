@@ -1,10 +1,12 @@
-# _utils.nix :: { URLDirName, PresentWorkingDirectory } ->  Functions
+# _utils.nix :: { URLDirName, WorkingDirectory } ->  Functions
+#
 # URLDirName :: String
 #     URL to a remote directory where supporting
 #     files reside; it should end with a forward
 #     slash.
 #     (e.g., "https://github.com/toraritte/shell.nixes/raw/dev/baseline/")
-# PresentWorkingDirectory :: NixPath
+#
+# WorkingDirectory :: NixPath
 #     This  should point  to a  local dir  where
 #     supporting files reside.
 #
@@ -17,7 +19,7 @@
 #     of like in a closure).
 #     TODO Figure out why this is.
 
-{ remote_prefix,  working_dir ? ./. }:
+{ remote_prefix,  working_dir }:
 
 let
 
