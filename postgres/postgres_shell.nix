@@ -32,8 +32,29 @@
 #
 # }}-
 
+# TEST ONE-LINERS {{-
+# + mac:
+#   nix-shell --argstr "nixpkgs_commit" "nixpkgs-22.11-darwin" --arg "_utils_file" './_utils.nix' postgres/postgres_shell.nix --show-trace
+# + linux:
+#   same but replace "nixpkgs-22.11-darwin" with "22.11" (or other)
+# }}-
+
+# PERMANENT WARNING HEADER FOR ALL NIX FILES
+#
+#   Relative  paths  will always  be  expanded
+#   relative  to where  the Nix  expression is
+#   executed from. If  a shell.nix is fetched,
+#   then  it  will  be from  Nix  store.  This
+#   should  be  super   obvious,  but  I  keep
+#   burning myself  with not  remembering this
+#   fact.
+
 { nixpkgs_commit # See head of `baseline_config.nix` if also want to pass pkg sets.
 , raw_github_url_to_shell_nix_dir ? ""
+, _utils_file ?
+    ( builtins.fetchurl
+      "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+    )
 }:
 
 let
@@ -51,10 +72,6 @@ let
       { config = {}; overlays = []; }
   ;
 
-  _utils_file =
-    builtins.fetchurl
-      "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
-  ;
   # short for shell.nixes_utils
   snutils =
     (import _utils_file)
@@ -74,7 +91,7 @@ in
     shellHook =
         snutils.fetchFileContents "shell-hook.sh"
       + snutils.cleanUp ["clean-up.sh"]
-      #+ c ["../t" "clean-up.sh" "../t"]
+      # + snutils.cleanUp ["../t" "clean-up.sh" "../t"]
     ;
 
     ######################################################################

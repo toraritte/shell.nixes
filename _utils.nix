@@ -47,7 +47,8 @@ let
   #      remote URL is needed.
 
   fetchFile' =
-    { working_dir, remote_prefix }@p: filename:
+    { working_dir, remote_prefix }@p:
+    filename:
     let
       # The journey to figure out how to get the current dir:
       # + https://discourse.nixos.org/t/how-to-refer-to-current-directory-in-shell-nix/9526
@@ -67,11 +68,14 @@ let
 
   fetchFile = fetchFile' { inherit remote_prefix working_dir; };
 
-  fetchFileContents =
+  fetchFileContents' =
+    fetcher:
     compose
       builtins.readFile
-      fetchFile
+      fetcher
   ;
+
+  fetchFileContents = fetchFileContents' fetchFile;
 
   # a.k.a., trapWrap
   # cleanUp :: List ShellScriptName -> TrapWrappedString
@@ -90,15 +94,14 @@ let
   # + fetchFile
 
   cleanUp' =
-    { working_dir, remote_prefix }@p: shell_script_names:
+    fetcher:
+    shell_script_names:
     let
-
-      fetchFile = fetchFile' { inherit remote_prefix working_dir; };
 
     # cat_scripts :: List ShellScriptName -> String
       cat_scripts =
         builtins.foldl'
-          (acc: next: acc + (fetchFile next))
+          (acc: next: acc + ((fetchFileContents' fetcher) next))
           ""
       ;
     in
@@ -111,10 +114,15 @@ let
       ''
   ;
 
-  cleanUp = cleanUp' { inherit remote_prefix working_dir; };
+  cleanUp = cleanUp' fetchFile;
 
 in
 
-  { inherit fetchFile fetchFile' cleanUp cleanUp' fetchFileContents; }
+  { inherit fetchFile fetchFile'
+            cleanUp cleanUp'
+            fetchFileContents fetchFileContents'
+            compose
+    ;
+  }
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
