@@ -70,7 +70,7 @@ let
   fetchFileContents =
     compose
       builtins.readFile
-      ( fetchFile filename )
+      fetchFile
   ;
 
   # a.k.a., trapWrap
