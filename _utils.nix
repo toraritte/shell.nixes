@@ -90,12 +90,15 @@ let
   # + fetchFile
 
   cleanUp' =
-    remote_prefix: shell_script_names:
+    { working_dir, remote_prefix }@p: shell_script_names:
     let
+
+      fetchFile = fetchFile' { inherit remote_prefix working_dir; };
+
     # cat_scripts :: List ShellScriptName -> String
       cat_scripts =
         builtins.foldl'
-          (acc: next: acc + (fetchFile remote_prefix next))
+          (acc: next: acc + (fetchFile next))
           ""
       ;
     in
