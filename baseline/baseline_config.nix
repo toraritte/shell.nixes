@@ -116,7 +116,7 @@ let
       myVim = # {{-
         pkgs.vim_configurable.customize {
 
-          vimrcConfig.customRC = snutils.f "vimrc";
+          vimrcConfig.customRC = snutils.fetchFileContents "vimrc";
 
           vimrcConfig.packages.myVimPackage =
             with pkgs.vimPlugins; {
@@ -305,7 +305,7 @@ let
                # returns a Nix path
         ;
 
-        shellHook = snutils.f "shell-hook.sh";
+        shellHook = snutils.fetchFileContents "shell-hook.sh";
     };
 in
   wrapper_function { maybeNixpkgsCommit = nixpkgs_commit; }
