@@ -297,7 +297,8 @@ let
           # Check if this shell.nix is run remotely or locally
           if ( builtins.pathExists ./git.conf )
           # when this shell.nix is run from the repo
-          then pkgs.writeText "git.conf" ( builtins.readFile ./git.conf )
+          then ./git.conf
+          # then pkgs.writeText "git.conf" ( builtins.readFile ./git.conf )
                # returns a derivation, but its `outPath`
                # attribute is called directly
           # when run remotely using run.sh
