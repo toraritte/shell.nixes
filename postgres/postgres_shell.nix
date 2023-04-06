@@ -72,8 +72,8 @@ in
     ];
 
     shellHook =
-        snutils.f "shell-hook.sh"
-      + snutils.c ["clean-up.sh"]
+        snutils.fetchFileContents "shell-hook.sh"
+      + snutils.cleanUp ["clean-up.sh"]
       #+ c ["../t" "clean-up.sh" "../t"]
     ;
 

@@ -23,6 +23,9 @@
 
 let
 
+  # https://funprog.srid.ca/nix/nix-and-composition.html
+  compose = f: g: x: f ( g x );
+
   # fetchFile :: FileNameOrPath -> FileContents
   #   FileContents :: String
   # FileNameOrPath :: String
@@ -43,7 +46,7 @@ let
   #      unable to  deal with it so  a "hard-coded"
   #      remote URL is needed.
 
-  fetchFile =
+  fetchFile' =
     { working_dir, remote_prefix }@p: filename:
     let
       # The journey to figure out how to get the current dir:
@@ -55,16 +58,20 @@ let
       # Check if this shell.nix is run remotely or locally
       if ( builtins.pathExists path )
       # when this shell.nix is run from the repo
-      then builtins.readFile path #=> String
+      then path #=> String
       # when run remotely using run.sh
-      else builtins.readFile
-          ( builtins.fetchurl
-            ( p.remote_prefix + filename) #=> Nix store path (usually `/nix/store/...`)
-          )
-          #=> String
+      else builtins.fetchurl
+             ( p.remote_prefix + filename) #=> Nix store path (usually `/nix/store/...`)
+           #=> String
   ;
 
-  f = fetchFile { inherit remote_prefix working_dir; };
+  fetchFile = fetchFile' { inherit remote_prefix working_dir; };
+
+  fetchFileContents =
+    compose
+      builtins.readFile
+      ( fetchFile filename )
+  ;
 
   # a.k.a., trapWrap
   # cleanUp :: List ShellScriptName -> TrapWrappedString
@@ -82,7 +89,7 @@ let
   # Dependencies:
   # + fetchFile
 
-  cleanUp =
+  cleanUp' =
     remote_prefix: shell_script_names:
     let
     # cat_scripts :: List ShellScriptName -> String
@@ -101,10 +108,10 @@ let
       ''
   ;
 
-  c = cleanUp { inherit remote_prefix working_dir; };
+  cleanUp = cleanUp' { inherit remote_prefix working_dir; };
 
 in
 
-  { inherit fetchFile f cleanUp c; }
+  { inherit fetchFile fetchFile' cleanUp cleanUp' fetchFileContents; }
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:
