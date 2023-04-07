@@ -53,7 +53,9 @@
 , raw_github_url_to_shell_nix_dir ? ""
 , _utils_file ?
     ( builtins.fetchurl
-      "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+        #                                         !!  VVV  !!
+        "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+        #                                         !!  ^^^  !!
     )
 }:
 
