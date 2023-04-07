@@ -106,17 +106,15 @@ let
           "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
       ;
       # short for shell.nixes_utils
-      snutils =
+      sn_utils =
         (import _utils_file)
-          { remote_prefix = raw_github_url_to_shell_nix_dir;
-            working_dir = ./.;
-          }
+          { remote_prefix = raw_github_url_to_shell_nix_dir; }
       ;
 
       myVim = # {{-
         pkgs.vim_configurable.customize {
 
-          vimrcConfig.customRC = snutils.fetchFileContents "vimrc";
+          vimrcConfig.customRC = sn_utils.fetchFileContents ./vimrc;
 
           vimrcConfig.packages.myVimPackage =
             with pkgs.vimPlugins; {
@@ -293,20 +291,9 @@ let
         # }}-
 
         # https://discourse.nixos.org/t/is-it-possible-to-change-the-default-git-user-config-for-a-devshell/17612
-        GIT_CONFIG_GLOBAL =
-          # Check if this shell.nix is run remotely or locally
-          if ( builtins.pathExists ./git.conf )
-          # when this shell.nix is run from the repo
-          then ./git.conf
-          # then pkgs.writeText "git.conf" ( builtins.readFile ./git.conf )
-               # returns a derivation, but its `outPath`
-               # attribute is called directly
-          # when run remotely using run.sh
-          else builtins.fetchurl ( raw_github_url_to_shell_nix_dir + "git.conf" )
-               # returns a Nix path
-        ;
+        GIT_CONFIG_GLOBAL = sn_utils.fetchFile ./git.conf;
 
-        shellHook = snutils.fetchFileContents "shell-hook.sh";
+        shellHook = sn_utils.fetchFileContents ./shell-hook.sh;
     };
 in
   wrapper_function { maybeNixpkgsCommit = nixpkgs_commit; }

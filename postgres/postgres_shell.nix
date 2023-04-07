@@ -73,11 +73,9 @@ let
   ;
 
   # short for shell.nixes_utils
-  snutils =
+  sn_utils =
     (import _utils_file)
-      { remote_prefix = raw_github_url_to_shell_nix_dir;
-        working_dir = ./.;
-      }
+      { remote_prefix = raw_github_url_to_shell_nix_dir; }
   ;
 
 in
@@ -89,9 +87,9 @@ in
     ];
 
     shellHook =
-        snutils.fetchFileContents "shell-hook.sh"
-      + snutils.cleanUp ["clean-up.sh"]
-      # + snutils.cleanUp ["../t" "clean-up.sh" "../t"]
+        sn_utils.fetchFileContents ./shell-hook.sh
+      + sn_utils.cleanUp [./clean-up.sh]
+      # + sn_utils.cleanUp [../t ./clean-up.sh ../t]
     ;
 
     ######################################################################
