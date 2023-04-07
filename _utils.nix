@@ -19,12 +19,51 @@
 #     of like in a closure).
 #     TODO Figure out why this is.
 
-{ remote_prefix,  working_dir }:
+{ remote_prefix }:
 
 let
 
   # https://funprog.srid.ca/nix/nix-and-composition.html
   compose = f: g: x: f ( g x );
+
+  # NOTE `localOrRemoteFile` vs `fetchFile` {{-
+  #
+  # When `rel_path` is  a local file, the  output is the
+  # same (i.e., the resolved  absolute path of the input
+  # relative path),  but instances of the  Nix path data
+  # type  have  different  semantics, depending  on  the
+  # context.
+  #
+  # For example:
+  #
+  # + If sssigned to variable, it is just that, a path.
+  #
+  # + If  assigned to  variable in  the body  of
+  #   `mkShell`, that variable  will be exported
+  #   as  an environment  variable and  the path
+  #   will  be copied  to  the  Nix store.  (See
+  #   e.g., this thread
+  #   https://discourse.nixos.org/t/when-is-a-path-in-a-nix-expression-copied-into-the-nix-store/27052.)
+  #
+  # Therefore, in  the case of local  assets, it doesn't
+  # matter which one is used, but if the expectation for
+  # the path  is to  end up  in the  Nix store  then use
+  # `fetchFile`.
+  # }}-
+
+  localOrRemoteFile' =
+    { remote_prefix ? remote_prefix
+    , rel_path # relative to shell.nix being evaluated; add WARNING
+    }:
+    if ( builtins.pathExists rel_path )
+    then rel_path
+    else remote_prefix + ( builtins.baseNameOf rel_path )
+  ;
+
+  localOrRemoteFile =
+    rel_path:
+    localOrRemoteFile' { inherit remote_prefix rel_path; }
+  ;
 
   # fetchFile :: FileNameOrPath -> FileContents
   #   FileContents :: String
@@ -47,26 +86,31 @@ let
   #      remote URL is needed.
 
   fetchFile' =
-    { working_dir, remote_prefix }@p:
-    filename:
+    { rel_path
+    , remote_prefix ? remote_prefix
+    }:
     let
       # The journey to figure out how to get the current dir:
       # + https://discourse.nixos.org/t/how-to-refer-to-current-directory-in-shell-nix/9526
       # + https://stackoverflow.com/questions/43850371/when-does-a-nix-path-type-make-it-into-the-nix-store-and-when-not
       # + https://gist.github.com/CMCDragonkai/de84aece83f8521d087416fa21e34df4
-      path = p.working_dir + "/${filename}";
+
+      path_or_url = localOrRemoteFile rel_path;
     in
       # Check if this shell.nix is run remotely or locally
-      if ( builtins.pathExists path )
+      if ( (builtins.typeOf path_or_url) == "path" )
       # when this shell.nix is run from the repo
-      then path #=> String
+      then rel_path #=> String
       # when run remotely using run.sh
-      else builtins.fetchurl
-             ( p.remote_prefix + filename) #=> Nix store path (usually `/nix/store/...`)
+      else builtins.fetchurl path_or_url
+             # ( p.remote_prefix + rel_path) #=> Nix store path (usually `/nix/store/...`)
            #=> String
   ;
 
-  fetchFile = fetchFile' { inherit remote_prefix working_dir; };
+  fetchFile =
+    rel_path:
+    fetchFile' { inherit remote_prefix rel_path; }
+  ;
 
   fetchFileContents' =
     fetcher:
@@ -95,7 +139,7 @@ let
 
   cleanUp' =
     fetcher:
-    shell_script_names:
+    shell_script_paths:
     let
 
     # cat_scripts :: List ShellScriptName -> String
@@ -108,7 +152,7 @@ let
       ''
         trap \
         "
-        ${cat_scripts shell_script_names}
+        ${cat_scripts shell_script_paths}
         " \
         EXIT
       ''
@@ -118,9 +162,10 @@ let
 
 in
 
-  { inherit fetchFile fetchFile'
-            cleanUp cleanUp'
-            fetchFileContents fetchFileContents'
+  { inherit localOrRemoteFile' localOrRemoteFile
+                     fetchFile fetchFile'
+             fetchFileContents fetchFileContents'
+                       cleanUp cleanUp'
             compose
     ;
   }
