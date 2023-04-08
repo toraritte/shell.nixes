@@ -59,12 +59,9 @@
 # }}-
 { nixpkgs_commit ? import <nixpkgs> {}
 , raw_github_url_to_shell_nix_dir ? ""
-, _utils_file ?
-    ( builtins.fetchurl
-        #                                         !!  VVV  !!
-        "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
-        #                                         !!  ^^^  !!
-    )
+#                                                         !!  VVV  !!
+, _utils_file ? "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+#                                                         !!  ^^^  !!
 }:
 
 let
@@ -109,7 +106,7 @@ let
 
       # short for shell.nixes_utils
       sn_utils =
-        (import _utils_file)
+        (import (builtins.fetchurl _utils_file))
           { remote_prefix = raw_github_url_to_shell_nix_dir; }
       ;
 
