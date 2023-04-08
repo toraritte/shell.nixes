@@ -95,7 +95,7 @@ let
 # affect execution in commands,  but keep the above in
 # mind.
 # }}- }}-
-# cleanUp' :: (RelativeNixPath -> Path) -> List ShellScript -> TrapWrappedScript {{- {{-
+# cleanUp :: (RelativeNixPath -> Path) -> List ShellScript -> TrapWrappedScript {{- {{-
 #
 # ShellScript :: NixPath to file containing valid shell commands
 # TrapWrappedScript :: "trap \ " + ... + " \ EXIT"
@@ -104,11 +104,12 @@ let
 # + fetchContents
 # + builtins
 # }}-
-  cleanUp' =
+  cleanUp =
     fetcher:
     shell_script_paths:
     let
-      cat_scripts =
+    # catScripts :: List ShellScript -> String
+      catScripts =
         builtins.foldl'
           (acc: next: acc + ((fetchContents fetcher) next))
           ""
@@ -117,30 +118,19 @@ let
       ''
         trap \
         "
-        ${cat_scripts shell_script_paths}
+        ${catScripts shell_script_paths}
         " \
         EXIT
       ''
   ;
 
 # }}-
-# cleanUp  :: List ShellScript -> TrapWrappedScript {{- {{-
-#
-# ShellScript :: RelativeNixPath to file containing valid shell commands
-# TrapWrappedScript :: "trap \ " + ... + " \ EXIT"
-#
-# Dependencies:
-# + fetchContents
-# + builtins
-# }}-
-  cleanUp = cleanUp' fetchLocalOrRemoteFile;
-# }}-
 
 in
 
   { inherit        fetchRemoteFile fetchRemoteFile'
             fetchLocalOrRemoteFile fetchLocalOrRemoteFile'
-                           cleanUp cleanUp'
+            cleanUp
             compose
             fetchContents
     ;
@@ -213,23 +203,23 @@ in
 # }}-
 # 3. Nix path resolutions and side effects {{-
 #
-# **KEEP IN MIND**:
+#    **KEEP IN MIND**:
 #
-#   Whether  the  evaluation  of  a  Nix  path
-#   results in side effects  or not depends on
-#   the context!
+#      Whether  the  evaluation  of  a  Nix  path
+#      results in side effects  or not depends on
+#      the context!
 #
-# For example, if a Nix path is assigned to a variable
-# in  the body  of  `mkShell`, that  variable will  be
-# exported  as an  environment variable  AND the  path
-# will be copied to the  Nix store. Otherwise, it will
-# probably just get expanded to an absolute path.
+#    For example, if a Nix path is assigned to a variable
+#    in  the body  of  `mkShell`, that  variable will  be
+#    exported  as an  environment variable  AND the  path
+#    will be copied to the  Nix store. Otherwise, it will
+#    probably just get expanded to an absolute path.
 #
-#    a. https://discourse.nixos.org/t/how-to-refer-to-current-directory-in-shell-nix/9526
-#    b. https://stackoverflow.com/questions/43850371/when-does-a-nix-path-type-make-it-into-the-nix-store-and-when-not
-#    c. https://gist.github.com/CMCDragonkai/de84aece83f8521d087416fa21e34df4
-#    d. https://discourse.nixos.org/t/infinite-loop-when-importing-fetched-nix-expression-with-relative-path/27032
-#    e. https://discourse.nixos.org/t/when-is-a-path-in-a-nix-expression-copied-into-the-nix-store/27052
+#       a. https://discourse.nixos.org/t/how-to-refer-to-current-directory-in-shell-nix/9526
+#       b. https://stackoverflow.com/questions/43850371/when-does-a-nix-path-type-make-it-into-the-nix-store-and-when-not
+#       c. https://gist.github.com/CMCDragonkai/de84aece83f8521d087416fa21e34df4
+#       d. https://discourse.nixos.org/t/infinite-loop-when-importing-fetched-nix-expression-with-relative-path/27032
+#       e. https://discourse.nixos.org/t/when-is-a-path-in-a-nix-expression-copied-into-the-nix-store/27052
 
 # }}-
 # 4. cleanUp -> trapWrap?`
