@@ -73,9 +73,10 @@ let
 
   # short for shell.nixes_utils
   sn_utils =
-    (import (builtins.fetchurl _utils_file))
-      { remote_prefix = raw_github_url_to_shell_nix_dir; }
+      (import (builtins.fetchurl _utils_file)) raw_github_url_to_shell_nix_dir
   ;
+  fetchContents = sn_utils.fetchContents sn_utils.fetchLocalOrRemoteFile;
+  cleanUp = sn_utils.cleanUp sn_utils.fetchLocalOrRemoteFile;
 
 in
 
@@ -86,8 +87,8 @@ in
     ];
 
     shellHook =
-        sn_utils.fetchFileContents ./shell-hook.sh
-      + sn_utils.cleanUp [./clean-up.sh]
+        fetchContents ./shell-hook.sh
+      + cleanUp [ ./clean-up.sh ]
       # + sn_utils.cleanUp [../t ./clean-up.sh ../t]
     ;
 

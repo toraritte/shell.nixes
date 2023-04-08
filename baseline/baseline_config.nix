@@ -65,17 +65,17 @@
 }:
 
 let
-  # WHY THE `wrapper_function`? {{-
+  # WHY THE `wrapperFunction`? {{-
   # ====================================================
   #
   # Wanted to  be able  to pass both  a string  (i.e., a
   # commit hash in  the Nixpkgs repo) and  a package set
-  # as  well. The  `wrapper_function`  is most  probably
+  # as  well. The  `wrapperFunction`  is most  probably
   # superfluous  though as  I  could have  just put  the
   # conditional at the top, and I can't remember what my
   # original reasoning was.
 
-  # ASIDE: wrapper_function: `let .. in ..` vs `() {}`
+  # ASIDE: wrapperFunction: `let .. in ..` vs `() {}`
   # ====================================================
   # Could have used  the latter too, and  only chose the
   # former  because it  looked more  Nix-y (albeit  more
@@ -84,7 +84,7 @@ let
   #    { commit ? import <nixpkgs> {} }:
   #
   #    (
-  #      { maybeNixpkgsCommit }:
+  #      { maybe_nixpkgs_commit }:
   #
   #      let
   #        pkgs = ...
@@ -92,28 +92,28 @@ let
   #        pkgs.mkShell {
   #          ...
   #        }
-  #    ) { maybeNixpkgsCommit = commit; }
+  #    ) { maybe_nixpkgs_commit = commit; }
   # }}-
-  wrapper_function =
-    { maybeNixpkgsCommit }:
+  wrapperFunction =
+    { maybe_nixpkgs_commit }:
 
     let
       pkgs =
-        if ( builtins.isString maybeNixpkgsCommit )
-        then import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs/tarball/${maybeNixpkgsCommit}") {}
-        else maybeNixpkgsCommit
+        if ( builtins.isString maybe_nixpkgs_commit )
+        then import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs/tarball/${maybe_nixpkgs_commit}") {}
+        else maybe_nixpkgs_commit
       ;
 
       # short for shell.nixes_utils
       sn_utils =
-        (import (builtins.fetchurl _utils_file))
-          { remote_prefix = raw_github_url_to_shell_nix_dir; }
+        (import (builtins.fetchurl _utils_file)) raw_github_url_to_shell_nix_dir
       ;
+      fetchContents = sn_utils.fetchContents sn_utils.fetchLocalOrRemoteFile;
 
-      myVim = # {{-
+      my_vim = # {{-
         pkgs.vim_configurable.customize {
 
-          vimrcConfig.customRC = sn_utils.fetchFileContents ./vimrc;
+          vimrcConfig.customRC = fetchContents ./vimrc;
 
           vimrcConfig.packages.myVimPackage =
             with pkgs.vimPlugins; {
@@ -174,7 +174,7 @@ let
           pkgs.unzip
           pkgs.zip
           pkgs.netcat
-          myVim
+          my_vim
           pkgs.elixir
           pkgs.erlang
           pkgs.tmux
@@ -290,11 +290,11 @@ let
         # }}-
 
         # https://discourse.nixos.org/t/is-it-possible-to-change-the-default-git-user-config-for-a-devshell/17612
-        GIT_CONFIG_GLOBAL = sn_utils.fetchFile ./git.conf;
+        GIT_CONFIG_GLOBAL = sn_utils.fetchLocalOrRemoteFile ./git.conf;
 
-        shellHook = sn_utils.fetchFileContents ./shell-hook.sh;
+        shellHook = fetchContents ./shell-hook.sh;
     };
 in
-  wrapper_function { maybeNixpkgsCommit = nixpkgs_commit; }
+  wrapperFunction { maybe_nixpkgs_commit = nixpkgs_commit; }
 
 # vim: set foldmethod=marker foldmarker={{-,}}- foldlevelstart=0 tabstop=2 shiftwidth=2 expandtab:

@@ -1,5 +1,7 @@
 TODO: This repo is huge mess...
 
+TODO: Make naming style consistent. (E.g., in `_utils.nix` functions and types have snake case, while other variables are CamelCased, and other Nix expressions are all over the place.)
+
 + `_helpers`: Some good notes in `README`s, but it was so long ago that not even sure what I was trying to achieve.
 + `_utils`: Helper functions for composing `shellHook`s; see `shell.nix` files in [`./postgres`](./postgres) and [`.baseline`](./baseline) directories. (I think this was to goal of `_helpers`, but I had even less clue of what I was doing than now.)
 
