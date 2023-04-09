@@ -23,7 +23,7 @@
 #
 # RelativePathToRemoteFile :: String
 #                     + ^[^/]+(\/[^/]+)+? (this is probably wrong)
-#                     (e.g., "git.conf", "postgres/clean_up.sh")
+#                     (e.g., "git.conf", "postgres/clean-up.sh")
 # }}-
 
 # _utils.nix :: URLDir ->  NixAttrSet Functions
@@ -31,10 +31,34 @@ url_dir:
 
 let
 
-# compose :: (b -> c) -> (a -> b) -> (a -> c)
+# compose :: (b -> c) -> (a -> b) -> (a -> c) {{- {{-
 # https://funprog.srid.ca/nix/nix-and-composition.html
+# }}- }}-
   compose = f: g: x: f ( g x );
 
+# relPathToRelPathString :: RelativeNixPath -> RelativePathToRemoteFile {{- {{-
+#
+# Example:
+#   nix-repl> u = import ./_utils.nix ""
+#   nix-repl> u.relPathToRelPathString ./postgres/clean-up.sh
+#   "postgres/clean-up.sh"
+#
+# https://discourse.nixos.org/t/converting-from-types-path-to-types-str/19405/4
+# }}-
+  relPathToRelPathString =
+    rel_path:
+    let
+      pwd_length = builtins.stringLength (builtins.toString ./.);
+    in
+      builtins.substring
+        ( pwd_length + 1 ) # start
+        ( -1 )             # end
+        ( builtins.toString rel_path ) # input string
+      ;
+
+  r = relPathToRelPathString;
+
+# }}-
 # fetchRemoteFile' :: URLDir -> RelativePathToRemoteFile -> NixStorePath {{- {{-
 #
 #   See notes at `fetchLocalOrRemoteFile'`.
@@ -65,7 +89,7 @@ let
     # when this <g>"shell.nix" expression</g> is run from the repo
     then rel_path #=> NixPath
     # when run remotely (e.g., using run.sh)
-    else fetchRemoteFile' url_dir ( builtins.baseNameOf rel_path )
+    else fetchRemoteFile' url_dir ( relPathToRelPathString rel_path )
   ;
 
 # }}-
@@ -130,9 +154,10 @@ in
 
   { inherit        fetchRemoteFile fetchRemoteFile'
             fetchLocalOrRemoteFile fetchLocalOrRemoteFile'
-            cleanUp
             compose
+            relPathToRelPathString
             fetchContents
+            cleanUp
     ;
   }
 
