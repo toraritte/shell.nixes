@@ -27,7 +27,7 @@
 # }}-
 
 # _utils.nix :: URLDir ->  NixAttrSet Functions
-url_dir:
+url_dir: pwd:
 
 let
 
@@ -48,7 +48,7 @@ let
   relPathToRelPathString =
     rel_path:
     let
-      pwd_length = builtins.stringLength (builtins.toString ./.);
+      pwd_length = builtins.stringLength (builtins.toString pwd);
     in
       builtins.substring
         ( pwd_length + 1 ) # start
