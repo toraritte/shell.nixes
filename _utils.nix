@@ -1,3 +1,7 @@
+# !!! WARNING !!!
+#
+# This is a mess. It works mostly in this repo at this commit, remotely and locally, but only if nothing is touched - either here or in the files where this is imported (namely, `postgres/postgres_shell.nix` and `baseline/baseline_config.nix`).
+
 ### TYPES ### {{-
 #
 #    URL :: String

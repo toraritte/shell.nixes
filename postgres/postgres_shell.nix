@@ -52,7 +52,7 @@
 { nixpkgs_commit # See head of `baseline_config.nix` if also want to pass pkg sets.
 , raw_github_url_to_shell_nix_dir ? ""
 #                                                         !!  VVV  !!
-, _utils_file ? "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+, _utils_file ? "https://github.com/toraritte/shell.nixes/raw/main/_utils.nix"
 #                                                         !!  ^^^  !!
 }:
 

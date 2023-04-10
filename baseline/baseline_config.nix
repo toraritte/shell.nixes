@@ -60,7 +60,7 @@
 { nixpkgs_commit ? import <nixpkgs> {}
 , raw_github_url_to_shell_nix_dir ? ""
 #                                                         !!  VVV  !!
-, _utils_file ? "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+, _utils_file ? "https://github.com/toraritte/shell.nixes/raw/main/_utils.nix"
 #                                                         !!  ^^^  !!
 }:
 
