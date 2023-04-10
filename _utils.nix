@@ -119,30 +119,26 @@ let
 # affect execution in commands,  but keep the above in
 # mind.
 # }}- }}-
-# cleanUp :: (RelativeNixPath -> Path) -> List ShellScript -> TrapWrappedScript {{- {{-
+# cleanUp :: List ShellScript -> TrapWrappedScript {{- {{-
 #
-# ShellScript :: NixPath to file containing valid shell commands
-# TrapWrappedScript :: "trap \ " + ... + " \ EXIT"
+# ShellScript :: ( NixPath | String )
+#
+#     That is,  a Nix  path type  to a
+#     file with  or a string  of valid
+#     shell commands.
+#
+# TrapWrappedScript :: "trap \ " + "..." + " \ EXIT"
 #
 # Dependencies:
 # + fetchContents
 # + builtins
 # }}-
   cleanUp =
-    fetcher:
-    shell_script_paths:
-    let
-    # catScripts :: List ShellScript -> String
-      catScripts =
-        builtins.foldl'
-          (acc: next: acc + ((fetchContents fetcher) next))
-          ""
-      ;
-    in
+    shell_scripts:
       ''
         trap \
         "
-        ${catScripts shell_script_paths}
+        ${ builtins.concatStringsSep "" shell_scripts }
         " \
         EXIT
       ''
