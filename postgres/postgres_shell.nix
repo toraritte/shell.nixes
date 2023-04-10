@@ -52,7 +52,7 @@
 { nixpkgs_commit # See head of `baseline_config.nix` if also want to pass pkg sets.
 , raw_github_url_to_shell_nix_dir ? ""
 #                                                         !!  VVV  !!
-, _utils_file ? "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
+, utils ? builtins.fetchurl "https://github.com/toraritte/shell.nixes/raw/dev/_utils.nix"
 #                                                         !!  ^^^  !!
 }:
 
@@ -72,11 +72,7 @@ let
   ;
 
   # short for shell.nixes_utils
-  sn_utils =
-      (import (builtins.fetchurl _utils_file)) raw_github_url_to_shell_nix_dir
-  ;
-  fetchContents = sn_utils.fetchContents sn_utils.fetchLocalOrRemoteFile;
-  cleanUp = sn_utils.cleanUp sn_utils.fetchLocalOrRemoteFile;
+  sn_utils = (import utils) raw_github_url_to_shell_nix_dir;
 
 in
 
@@ -87,9 +83,18 @@ in
     ];
 
     shellHook =
-        fetchContents ./shell-hook.sh
-      + cleanUp [ ./clean-up.sh ]
-      # + sn_utils.cleanUp [../t ./clean-up.sh ../t]
+        sn_utils.fetchRelRemoteContents "shell-hook.sh"
+      #+ cleanUp [ ./clean-up.sh ]
+      + sn_utils.cleanUp
+          [
+            ( builtins.readFile ./t )
+            ( sn_utils.fetchRelRemoteContents "postgres/clean-up.sh" )
+            ''
+              echo "==========================="
+              echo "=== cleanUp test =========="
+              echo "==========================="
+            ''
+          ]
     ;
 
     ######################################################################

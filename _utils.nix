@@ -43,7 +43,7 @@ let
 # Dependencies:
 # + builtins
 # }}-
-  fetchRemoteFile' =
+  fetchRemoteFile =
     url_dir:
     rel_path_to_url_dir:
     builtins.fetchurl ( url_dir +  rel_path_to_url_dir )
@@ -51,56 +51,26 @@ let
 
 # }}-
 # fetchRemoteFile  :: RelativePathToRemoteFile -> NixStorePath {{-
-  fetchRemoteFile = fetchRemoteFile' url_dir;
+  fetchRelRemoteFile = fetchRemoteFile url_dir;
 
 # }}-
-# fetchLocalOrRemoteFile' :: URLDir -> RelativeNixPath -> Path {{- {{-
-#
-# Dependencies:
-# + builtins
-# }}-
-  fetchLocalOrRemoteFile' =
-    url_dir:
-    rel_path:
-    let
-
-      # Because `./.  + "/"  + rel_path`  does not
-      # work  in one  step.  An alternative  would
-      # have  been this,  but  the `builtins`  are
-      # just way to unpredictable...
-      #
-      #   builtins.concatStringsSep
-      #     ""
-      #     [ (builtins.toString ./.) "/" "t" ]
-
-      abs_path = ( builtins.toString ./. ) + ("/" + rel_path);
-
-    in
-      if ( builtins.pathExists abs_path )
-      # when this <g>"shell.nix" expression</g> is run from the repo
-      then abs_path #=> NixPath
-      # when run remotely (e.g., using run.sh)
-      else fetchRemoteFile' url_dir rel_path
-  ;
-
-# }}-
-# fetchLocalOrRemoteFile  :: RelativeNixPath -> Path {{- {{-
-#
-# Dependencies:
-# + fetchLocalOrRemoteFile'
-# }}-
-  fetchLocalOrRemoteFile = fetchLocalOrRemoteFile' url_dir;
-
-# }}-
-# fetchContents :: (RelativeNixPath -> Path) -> (NixPath -> String) {{- {{-
+# fetchRemoteContents :: (RelativeNixPath -> Path) -> (NixPath -> String) {{- {{-
 #
 # Dependencies:
 # + compose
 # + builtins
 # }}-
-  fetchContents = fetcher: compose builtins.readFile fetcher;
+  fetchRelRemoteContents =
+    rel_path_to_url_dir:
+    builtins.readFile ( fetchRelRemoteFile rel_path_to_url_dir )
+  ;
 
 # }}-
+
+  fetchRemoteContents =
+    url:
+    builtins.readFile ( builtins.fetchurl url )
+  ;
 
 ### cleanUp WARNING: Use of quotes (`,',") in input files` {{- {{-
 #
@@ -139,10 +109,11 @@ let
 
 in
 
-  { inherit        fetchRemoteFile fetchRemoteFile'
-            fetchLocalOrRemoteFile fetchLocalOrRemoteFile'
-            compose
-            fetchContents
+  { inherit compose
+            fetchRemoteFile
+            fetchRelRemoteFile
+            fetchRemoteContents
+            fetchRelRemoteContents
             cleanUp
     ;
   }
