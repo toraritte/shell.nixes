@@ -27,7 +27,7 @@
 # }}-
 
 # _utils.nix :: URLDir ->  NixAttrSet Functions
-url_dir: pwd:
+url_dir:
 
 let
 
@@ -36,29 +36,6 @@ let
 # }}- }}-
   compose = f: g: x: f ( g x );
 
-# relPathToRelPathString :: RelativeNixPath -> RelativePathToRemoteFile {{- {{-
-#
-# Example:
-#   nix-repl> u = import ./_utils.nix ""
-#   nix-repl> u.relPathToRelPathString ./postgres/clean-up.sh
-#   "postgres/clean-up.sh"
-#
-# https://discourse.nixos.org/t/converting-from-types-path-to-types-str/19405/4
-# }}-
-  relPathToRelPathString =
-    rel_path:
-    let
-      pwd_length = builtins.stringLength (builtins.toString pwd);
-    in
-      builtins.substring
-        ( pwd_length + 1 ) # start
-        ( -1 )             # end
-        ( builtins.toString rel_path ) # input string
-      ;
-
-  r = relPathToRelPathString;
-
-# }}-
 # fetchRemoteFile' :: URLDir -> RelativePathToRemoteFile -> NixStorePath {{- {{-
 #
 #   See notes at `fetchLocalOrRemoteFile'`.
@@ -85,11 +62,25 @@ let
   fetchLocalOrRemoteFile' =
     url_dir:
     rel_path:
-    if ( builtins.pathExists rel_path )
-    # when this <g>"shell.nix" expression</g> is run from the repo
-    then rel_path #=> NixPath
-    # when run remotely (e.g., using run.sh)
-    else fetchRemoteFile' url_dir ( relPathToRelPathString rel_path )
+    let
+
+      # Because `./.  + "/"  + rel_path`  does not
+      # work  in one  step.  An alternative  would
+      # have  been this,  but  the `builtins`  are
+      # just way to unpredictable...
+      #
+      #   builtins.concatStringsSep
+      #     ""
+      #     [ (builtins.toString ./.) "/" "t" ]
+
+      nix_rel_path = ./. + ("/" + rel_path);
+
+    in
+      if ( builtins.pathExists nix_rel_path )
+      # when this <g>"shell.nix" expression</g> is run from the repo
+      then nix_rel_path #=> NixPath
+      # when run remotely (e.g., using run.sh)
+      else fetchRemoteFile' url_dir rel_path
   ;
 
 # }}-
@@ -151,7 +142,6 @@ in
   { inherit        fetchRemoteFile fetchRemoteFile'
             fetchLocalOrRemoteFile fetchLocalOrRemoteFile'
             compose
-            relPathToRelPathString
             fetchContents
             cleanUp
     ;
