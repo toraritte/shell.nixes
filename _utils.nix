@@ -73,12 +73,12 @@ let
       #     ""
       #     [ (builtins.toString ./.) "/" "t" ]
 
-      nix_rel_path = ./. + ("/" + rel_path);
+      abs_path = ( builtins.toString ./. ) + ("/" + rel_path);
 
     in
-      if ( builtins.pathExists nix_rel_path )
+      if ( builtins.pathExists abs_path )
       # when this <g>"shell.nix" expression</g> is run from the repo
-      then nix_rel_path #=> NixPath
+      then abs_path #=> NixPath
       # when run remotely (e.g., using run.sh)
       else fetchRemoteFile' url_dir rel_path
   ;
