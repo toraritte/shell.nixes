@@ -33,10 +33,24 @@
 # }}-
 
 # TEST ONE-LINERS {{-
-# + mac (assuming calling from `shell.nixes` project root):
-#  nix-shell --argstr "nixpkgs_commit" "nixpkgs-22.11-darwin" --argstr "_utils_file" "file://$(realpath _utils.nix)" postgres/postgres_shell.nix --show-trace
+# + mac
+#
+#   * Calling from `shell.nixes` project root:
+#     
+#       nix-shell --argstr "nixpkgs_commit" "nixpkgs-22.11-darwin" --argstr "_utils_file" "file://$(realpath _utils.nix)" postgres/postgres_shell.nix --show-trace
+#
+#     or
+#
+#       source run.sh -g https://github.com/toraritte/shell.nixes/blob/main/postgres/postgres_shell.nix                                                                     
+#
+#   * Calling remotely (once commits are pushed, that is):
+#
+#       source <(curl https://raw.githubusercontent.com/toraritte/shell.nixes/main/run.sh) -g https://github.com/toraritte/shell.nixes/blob/main/postgres/postgres_shell.nix
+#
 # + linux:
+#
 #   same but replace "nixpkgs-22.11-darwin" with "22.11" (or other)
+#
 # }}-
 
 # PERMANENT WARNING HEADER FOR ALL NIX FILES
