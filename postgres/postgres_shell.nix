@@ -33,8 +33,8 @@
 # }}-
 
 # TEST ONE-LINERS {{-
-# + mac:
-#   nix-shell --argstr "nixpkgs_commit" "nixpkgs-22.11-darwin" --arg "_utils_file" './_utils.nix' postgres/postgres_shell.nix --show-trace
+# + mac (assuming calling from `shell.nixes` project root):
+#  nix-shell --argstr "nixpkgs_commit" "nixpkgs-22.11-darwin" --argstr "_utils_file" "file://$(realpath _utils.nix)" postgres/postgres_shell.nix --show-trace
 # + linux:
 #   same but replace "nixpkgs-22.11-darwin" with "22.11" (or other)
 # }}-

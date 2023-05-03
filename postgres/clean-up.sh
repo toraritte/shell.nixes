@@ -10,6 +10,14 @@
 # be executed when SIGNAL crops up. See 'trap --help' for more.      #
 ######################################################################
 
+########################################################
+# WARNING Don't use double quotes or backticks here!   #
+# ----------------------------------                   #
+# ( ... or figure out how to use them without wreaking #
+#   havoc ....                                         #
+# )                                                    #
+########################################################
+
 echo
 echo '=============='
 echo 'CLEANING UP...'
@@ -30,4 +38,8 @@ pg_ctl -D $PGDATA stop
 ########################################################
 
 cd $PWD
-rm -rf $NIX_SHELL_DIR
+rm -rf $POSTGRES_DIR
+
+echo
+echo 'NOTE: _nix-shell directory will remain!'
+echo

@@ -6,14 +6,14 @@ echo "EXECUTING SHELL HOOK"
 # Create a diretory for the generated artifacts                      #
 ######################################################################
 
-mkdir .nix-shell
-export NIX_SHELL_DIR=$PWD/.nix-shell
+export POSTGRES_DIR="${PWD}/_nix-shell/postgres"
+mkdir -p $POSTGRES_DIR
 
 ######################################################################
 # Put the PostgreSQL databases in the project diretory.              #
 ######################################################################
 
-export PGDATA=$NIX_SHELL_DIR/db
+export PGDATA=$POSTGRES_DIR/db
 
 ######################################################################
 # If database is  not initialized (i.e., $PGDATA  directory does not #
