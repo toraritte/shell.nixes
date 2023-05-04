@@ -1,20 +1,21 @@
 #!/bin/sh
-
 echo "EXECUTING SHELL HOOK"
 
 ######################################################################
 # Create a diretory for the generated artifacts                      #
+#                                                                    #
+# ( This allows stacking  Nix shell expressions.  For example, nginx #
+#   will store its own "nginx" directory with logs, pidfile, etc.    #
+# )                                                                  #
 ######################################################################
 
 export NIX_SHELL_DIR="${PWD}/_nix-shell"
-export POSTGRES_DIR="${NIX_SHELL_DIR}/postgres"
-mkdir -p $POSTGRES_DIR
 
 ######################################################################
 # Put the PostgreSQL databases in the project diretory.              #
 ######################################################################
 
-export PGDATA=$POSTGRES_DIR/db
+export PGDATA="${NIX_SHELL_DIR}/postgres"
 
 ######################################################################
 # If database is  not initialized (i.e., $PGDATA  directory does not #
@@ -131,16 +132,16 @@ HOST_COMMON="host\s\+all\s\+all"
 sed -i "s|^$HOST_COMMON.*127.*$|host all all 0.0.0.0/0 trust|" $PGDATA/pg_hba.conf
 sed -i "s|^$HOST_COMMON.*::1.*$|host all all ::/0 trust|"      $PGDATA/pg_hba.conf
 
-pg_ctl                                                \
--D $PGDATA                                            \
--l $PGDATA/postgres.log                               \
--o "-c unix_socket_directories='$PGDATA'"             \
--o "-c listen_addresses='*'"                          \
--o "-c log_destination='stderr'"                      \
--o "-c logging_collector=on"                          \
--o "-c log_directory='log'"                           \
--o "-c log_filename='postgresql-%Y-%m-%d_%H%M%S.log'" \
--o "-c log_min_messages=info"                         \
--o "-c log_min_error_statement=info"                  \
--o "-c log_connections=on"                            \
+pg_ctl                                                  \
+-D $PGDATA                                              \
+-l $PGDATA/postgres.log                                 \
+-o "-c unix_socket_directories='$PGDATA'"               \
+-o "-c listen_addresses='*'"                            \
+-o "-c log_destination='stderr'"                        \
+-o "-c logging_collector=on"                            \
+-o "-c log_directory='log'"                             \
+-o "-c log_filename='postgresql-%Y-%m-%d_%H-%M-%S.log'" \
+-o "-c log_min_messages=info"                           \
+-o "-c log_min_error_statement=info"                    \
+-o "-c log_connections=on"                              \
 start
