@@ -100,6 +100,13 @@ in
       postgresql
     ];
 
+    # DECLARE ENVIRONMENT VARIABLE
+    # Simply leaving it here for future reference:
+    # this will resolve relative to the `shell.nix`
+    # and **not** to the store.
+    #
+    #    T = builtins.toString (/. + ./_nix-shell);
+
     shellHook =
         fetchContents ./shell-hook.sh
       + cleanUp [ ./clean-up.sh ]
