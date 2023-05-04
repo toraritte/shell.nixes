@@ -10,13 +10,17 @@
 # be executed when SIGNAL crops up. See 'trap --help' for more.      #
 ######################################################################
 
-########################################################
-# WARNING Don't use double quotes or backticks here!   #
-# ----------------------------------                   #
-# ( ... or figure out how to use them without wreaking #
-#   havoc ....                                         #
-# )                                                    #
-########################################################
+######################################################################
+######################################################################
+######################################################################
+####### WARNING Don't use double quotes or backticks here!   #########
+####### ----------------------------------                   #########
+####### ( ... or figure out how to use them without wreaking #########
+#######   havoc ....                                         #########
+####### )                                                    #########
+######################################################################
+######################################################################
+######################################################################
 
 echo
 echo '=============='
@@ -29,17 +33,4 @@ echo '=============='
 
 pg_ctl -D $PGDATA stop
 
-########################################################
-# Delete '.nix-shell' directory                        #
-# ----------------------------------                   #
-# The first  step is going  back to the  project root, #
-# otherwise '.nix-shell'  won't get deleted.  At least #
-# it didn't for me when exiting in a subdirectory.     #
-########################################################
-
-cd $PWD
-rm -rf $POSTGRES_DIR
-
-echo
-echo 'NOTE: ${NIX_SHELL_DIR} directory will remain!'
-echo
+# TODO Add switch to optionally remove the "postgres" directory (which includes PGDATA)?
