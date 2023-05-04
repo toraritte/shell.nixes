@@ -29,12 +29,6 @@ Sets up a toy PostgreSQL instance. (Used the word "toy" because this is a really
   All the same, but replace  `nixpkgs_commit` from `"nixpkgs-22.11-darwin"` with `"22.11"` (or something else that points to a commit in the [Nixpkgs repo](https://github.com/NixOS/nixpkgs)).
 
 
-### NOTE: The `_nix-shell` directory
+### NOTE: The `_nix-shell` directory (experimental)
 
-[`postgres_shell.nix`](./postgres_shell.nix) will create a temporary directory `db`  inside `_nix-shell`. `db` will be deleted upon exiting `nix-shell`, but `_nix-shell` will not; this is a convention so that other `shell.nix`-es can also set up their own sub-directories that may or may not need to be deleted (e.g., because the logs from a test run need to be examined afterwards).
-
-All of this is just convention though:
-
-  + To retain `db`, edit [`clean-up.sh`](./clean-up.sh). (Haven't tested how subsequent runs behave with an existing `db` dir, so you may want to rename the pre-existing one first.
-
-  + If the `_nix-shell` directory is not needed, then just delete it (or edit [`clean-up.sh`](./clean-up.sh)).
+Just a convention to make it possible for other Nix shell expressions in this repo to get stacked. Will see how it works.
