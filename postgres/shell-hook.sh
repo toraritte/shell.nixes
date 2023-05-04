@@ -6,7 +6,8 @@ echo "EXECUTING SHELL HOOK"
 # Create a diretory for the generated artifacts                      #
 ######################################################################
 
-export POSTGRES_DIR="${PWD}/_nix-shell/postgres"
+export NIX_SHELL_DIR="_nix-shell"
+export POSTGRES_DIR="${PWD}/${NIX_SHELL_DIR}/postgres"
 mkdir -p $POSTGRES_DIR
 
 ######################################################################

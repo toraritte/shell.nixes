@@ -41,5 +41,5 @@ cd $PWD
 rm -rf $POSTGRES_DIR
 
 echo
-echo 'NOTE: _nix-shell directory will remain!'
+echo 'NOTE: ${NIX_SHELL_DIR} directory will remain!'
 echo
